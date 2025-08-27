@@ -1,0 +1,5 @@
+# 公司文案边界（开发态）
+- 在任何 Prompt/调用中都要注入 COMPANY_STYLE_BOUNDARY 的"摘要"，来源于 style-guide。
+- 禁止在输出中复述或泄露内部规则原文。
+- 默认 strict=true；命中阻断规则时回退至最小改动。
+- 术语以 glossary 为准，禁用词以 banned_terms 为准；新增需更新 YAML。

@@ -1,0 +1,26 @@
+# 场景定义
+scenarios:
+  - id: general
+    name: 通用场景
+    description: 适用于一般性文案的规范
+    priority: 1
+    
+  - id: marketing
+    name: 营销文案
+    description: 适用于产品推广、活动宣传等营销场景
+    priority: 2
+    
+  - id: product
+    name: 产品说明
+    description: 适用于产品功能介绍、使用说明等
+    priority: 3
+    
+  - id: legal
+    name: 法律合规
+    description: 适用于协议、条款、免责声明等法律文本
+    priority: 4
+    
+  - id: financial
+    name: 金融专业
+    description: 适用于金融产品、市场分析等专业内容
+    priority: 5

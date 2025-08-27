@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LongPort AI 助手</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <header class="popup-header">
+            <h1>LongPort AI 助手</h1>
+            <p class="version">v1.3.1</p>
+        </header>
+        
+        <div class="popup-content">
+            <div class="status-section">
+                <h3>API 状态</h3>
+                <div class="api-status">
+                    <div class="status-item">
+                        <span class="status-label">公司内部 API:</span>
+                        <span class="status-indicator" id="companyStatus">未配置</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">OpenAI API:</span>
+                        <span class="status-indicator" id="openaiStatus">未配置</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">豆包 API:</span>
+                        <span class="status-indicator" id="doubanStatus">未配置</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="support-section">
+                <h3>支持网站</h3>
+                <div class="site-list">
+                    <div class="site-item">
+                        <span class="site-icon">📝</span>
+                        <span class="site-name">Notion</span>
+                        <span class="site-desc">文档写作与协作</span>
+                    </div>
+                    <div class="site-item">
+                        <span class="site-icon">📊</span>
+                        <span class="site-name">LongPort</span>
+                        <span class="site-desc">长文编辑与短评</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-section">
+                <button id="openOptions" class="btn btn-primary">打开设置</button>
+                <button id="refreshStatus" class="btn btn-secondary">刷新状态</button>
+            </div>
+        </div>
+        
+        <footer class="popup-footer">
+            <p>AI 辅助协作，让写作更简单</p>
+        </footer>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

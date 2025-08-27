@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notion AI 助手 - 调试页面</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f9fafb;
+    }
+    .test-text {
+      padding: 15px;
+      background: white;
+      border: 2px solid #3b82f6;
+      border-radius: 6px;
+      margin: 10px 0;
+      cursor: pointer;
+      user-select: text;
+    }
+    .test-text:hover {
+      background: #f0f9ff;
+    }
+    .instructions {
+      background: #fef3c7;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 4px solid #f59e0b;
+      margin: 20px 0;
+    }
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .status.success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    .status.error {
+      background: #fecaca;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+    }
+    .status.info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+  </style>
+</head>
+<body>
+  <h1>Notion AI 助手 - 调试页面</h1>
+  
+  <div class="instructions">
+    <h3>调试说明</h3>
+    <p>这个页面用于测试 Notion AI 助手插件的功能。请按照以下步骤操作：</p>
+    <ol>
+      <li>确保插件已安装并启用</li>
+      <li>选择下面的测试文本</li>
+      <li>右键点击，应该看到"AI 辅助协作"选项</li>
+      <li>如果看不到，请检查插件权限和配置</li>
+    </ol>
+  </div>
+
+  <div class="test-section">
+    <h3>测试文本 1</h3>
+    <div class="test-text">
+      这是一个测试文本，用于验证 Notion AI 助手插件的功能。请选择这段文字，然后右键点击查看是否出现"AI 辅助协作"选项。
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h3>测试文本 2</h3>
+    <div class="test-text">
+      这段文字包含一些语法问题，比如：句子太长，表达不够清晰，用词可以更准确。AI 助手应该能够帮助优化这些问题。
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h3>测试文本 3</h3>
+    <div class="test-text">
+      英文测试：This is a test text for the Notion AI Assistant plugin. Please select this text and right-click to see if the "AI 辅助协作" option appears.
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h3>调试信息</h3>
+    <div id="debugInfo">
+      <p>插件状态：<span id="pluginStatus">检查中...</span></p>
+      <p>右键菜单：<span id="contextMenuStatus">检查中...</span></p>
+      <p>内容脚本：<span id="contentScriptStatus">检查中...</span></p>
+    </div>
+    <button onclick="checkPluginStatus()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+      检查插件状态
+    </button>
+  </div>
+
+  <div class="test-section">
+    <h3>常见问题排查</h3>
+    <ul>
+      <li><strong>右键菜单不显示：</strong>检查插件是否启用，权限是否正确</li>
+      <li><strong>弹窗不出现：</strong>检查内容脚本是否正确注入</li>
+      <li><strong>API 调用失败：</strong>检查网络连接和 API 配置</li>
+      <li><strong>文本替换失败：</strong>检查页面权限和选择状态</li>
+    </ul>
+  </div>
+
+  <script>
+    // 检查插件状态
+    function checkPluginStatus() {
+      const pluginStatus = document.getElementById('pluginStatus');
+      const contextMenuStatus = document.getElementById('contextMenuStatus');
+      const contentScriptStatus = document.getElementById('contentScriptStatus');
+
+      // 检查插件是否安装
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        pluginStatus.textContent = '已安装';
+        pluginStatus.className = 'status success';
+        
+        // 尝试发送消息到插件
+        chrome.runtime.sendMessage({action: 'ping'}, (response) => {
+          if (chrome.runtime.lastError) {
+            contextMenuStatus.textContent = '连接失败: ' + chrome.runtime.lastError.message;
+            contextMenuStatus.className = 'status error';
+          } else {
+            contextMenuStatus.textContent = '连接正常';
+            contextMenuStatus.className = 'status success';
+          }
+        });
+      } else {
+        pluginStatus.textContent = '未安装或未启用';
+        pluginStatus.className = 'status error';
+      }
+
+      // 检查内容脚本
+      if (window.notionAIHelperLoaded) {
+        contentScriptStatus.textContent = '已加载';
+        contentScriptStatus.className = 'status success';
+      } else {
+        contentScriptStatus.textContent = '未加载';
+        contentScriptStatus.className = 'status error';
+      }
+    }
+
+    // 页面加载时自动检查
+    window.addEventListener('load', checkPluginStatus);
+
+    // 监听来自插件的内容脚本消息
+    window.addEventListener('message', (event) => {
+      if (event.source === window && event.data.type === 'NOTION_AI_HELPER_LOADED') {
+        window.notionAIHelperLoaded = true;
+        checkPluginStatus();
+      }
+    });
+
+    // 添加选择文本的视觉反馈
+    document.querySelectorAll('.test-text').forEach(text => {
+      text.addEventListener('mouseup', () => {
+        const selection = window.getSelection();
+        if (selection.toString().length > 0) {
+          text.style.background = '#e0f2fe';
+          setTimeout(() => {
+            text.style.background = 'white';
+          }, 1000);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

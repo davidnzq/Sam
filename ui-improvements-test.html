@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LongPort AI 助手界面改进测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007AFF;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        .test-area {
+            position: relative;
+            height: 500px;
+            border: 1px dashed #ccc;
+            margin: 20px 0;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: '✅ ';
+            color: #28a745;
+        }
+        .test-instructions {
+            background: #e7f3ff;
+            border-left: 4px solid #007AFF;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .test-text {
+            background: #f0f8ff;
+            border: 1px solid #b0d4ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+        
+        /* 弹窗样式 */
+        .longport-ai-popup {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            width: 600px;
+            max-width: 90%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+        
+        /* 弹窗头部 */
+        .ai-popup-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+        }
+        
+        .ai-popup-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        .close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* 弹窗内容 */
+        .ai-popup-content {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        /* 加载状态 */
+        .loading-section {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .loading {
+            color: #667eea;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .loading::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e3e3e3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 信息组样式 */
+        .optimization-content-group,
+        .optimization-details-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e3e3e3;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .group-title {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+        
+        /* 优化文案内容区域 */
+        .optimized-text-content {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .company-optimized-text {
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        /* 优化情况描述区域 */
+        .optimization-details-content {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .details-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .details-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            color: #555;
+        }
+        
+        .details-list li:last-child {
+            border-bottom: none;
+        }
+        
+        /* 按钮区域 */
+        .ai-popup-actions {
+            padding: 15px 20px;
+            border-top: 1px solid #e3e3e3;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+        
+        .replace-btn, .retry-btn, .cancel-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+        
+        .replace-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .replace-btn:hover:not(:disabled) {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+        
+        .replace-btn:disabled {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .cancel-btn:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        
+        .retry-btn {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .retry-btn:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        
+        /* 测试控制区域 */
+        .test-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .test-controls button {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        /* 状态指示器 */
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-success {
+            background-color: #28a745;
+        }
+        
+        .status-pending {
+            background-color: #ffc107;
+        }
+        
+        .status-failed {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 LongPort AI 助手界面改进测试</h1>
+        
+        <div class="section">
+            <h2>📋 功能优化清单</h2>
+            <ul class="feature-list">
+                <li><strong>弹窗拖拽功能</strong> - 支持鼠标拖拽移动弹窗位置</li>
+                <li><strong>内容区域优化</strong> - 分为两个信息组：优化文案 + 优化情况描述</li>
+                <li><strong>按钮功能增强</strong> - "应用优化结果"改为"替换"，增加"取消"按钮</li>
+                <li><strong>API调用验证</strong> - 确保真正调用了AI API</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>🧪 测试说明</h2>
+            <div class="test-instructions">
+                <p>本页面模拟了LongPort AI助手的弹窗界面，用于测试界面改进效果。您可以：</p>
+                <ul>
+                    <li><span class="highlight">拖拽测试</span>：点击弹窗头部并拖拽，验证弹窗可以移动</li>
+                    <li><span class="highlight">布局验证</span>：检查弹窗是否显示两个信息组</li>
+                    <li><span class="highlight">按钮功能</span>：测试"替换"和"取消"按钮</li>
+                    <li><span class="highlight">状态切换</span>：使用下方控制按钮切换不同状态</li>
+                </ul>
+            </div>
+            
+            <div class="test-controls">
+                <button id="showLoadingBtn">显示加载状态</button>
+                <button id="showSuccessBtn">显示成功结果</button>
+                <button id="showErrorBtn">显示错误结果</button>
+                <button id="resetBtn">重置弹窗位置</button>
+            </div>
+        </div>
+        
+        <div class="test-area" id="testArea">
+            <!-- 弹窗将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化弹窗
+            initPopup();
+            
+            // 绑定测试控制按钮
+            document.getElementById('showLoadingBtn').addEventListener('click', showLoadingState);
+            document.getElementById('showSuccessBtn').addEventListener('click', showSuccessState);
+            document.getElementById('showErrorBtn').addEventListener('click', showErrorState);
+            document.getElementById('resetBtn').addEventListener('click', resetPopupPosition);
+        });
+        
+        // 初始化弹窗
+        function initPopup() {
+            const testArea = document.getElementById('testArea');
+            testArea.innerHTML = `
+                <div class="longport-ai-popup" id="aiPopup">
+                    <div class="ai-popup-header" id="popupHeader">
+                        <h3>🤖 LongPort AI 助手</h3>
+                        <button class="close-btn" onclick="closePopup()">×</button>
+                    </div>
+                    
+                    <div class="ai-popup-content">
+                        <div class="loading-section">
+                            <div class="loading">🔄 正在调用公司AI进行文案优化...</div>
+                        </div>
+                        
+                        <div class="company-ai-result" style="display: none;">
+                            <!-- 第一个信息组：优化文案内容 -->
+                            <div class="optimization-content-group">
+                                <h4 class="group-title">📝 优化文案</h4>
+                                <div class="optimized-text-content">
+                                    <div class="company-optimized-text">等待AI优化结果...</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 第二个信息组：优化情况描述 -->
+                            <div class="optimization-details-group">
+                                <h4 class="group-title">📊 优化情况描述</h4>
+                                <div class="optimization-details-content">
+                                    <ul class="details-list">
+                                        <li>处理时间：计算中...</li>
+                                        <li>调整字数：计算中...</li>
+                                        <li>后续建议：等待AI分析...</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-popup-actions">
+                            <button class="replace-btn" disabled>替换</button>
+                            <button class="cancel-btn">取消</button>
+                            <button class="retry-btn" style="display: none;">重试AI调用</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 添加拖拽功能
+            addDragFunctionality();
+            
+            // 绑定按钮事件
+            bindButtonEvents();
+        }
+        
+        // 添加拖拽功能
+        function addDragFunctionality() {
+            const popup = document.getElementById('aiPopup');
+            const header = document.getElementById('popupHeader');
+            
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+            
+            header.addEventListener('mousedown', (e) => {
+                // 只有点击头部区域才能拖拽
+                if (e.target.classList.contains('close-btn')) return;
+                
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = popup.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                
+                // 添加拖拽样式
+                popup.style.cursor = 'grabbing';
+                header.style.cursor = 'grabbing';
+                
+                // 防止文本选择
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                const testArea = document.getElementById('testArea');
+                const testRect = testArea.getBoundingClientRect();
+                
+                // 限制弹窗在测试区域内
+                let newLeft = startLeft + deltaX - testRect.left;
+                let newTop = startTop + deltaY - testRect.top;
+                
+                // 获取弹窗尺寸
+                const popupRect = popup.getBoundingClientRect();
+                
+                // 确保弹窗不会超出测试区域
+                newLeft = Math.max(0, Math.min(newLeft, testRect.width - popupRect.width));
+                newTop = Math.max(0, Math.min(newTop, testRect.height - popupRect.height));
+                
+                popup.style.left = `${newLeft}px`;
+                popup.style.top = `${newTop}px`;
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    popup.style.cursor = 'default';
+                    header.style.cursor = 'grab';
+                }
+            });
+            
+            // 设置头部为可拖拽样式
+            header.style.cursor = 'grab';
+        }
+        
+        // 绑定按钮事件
+        function bindButtonEvents() {
+            const popup = document.getElementById('aiPopup');
+            const replaceBtn = popup.querySelector('.replace-btn');
+            const cancelBtn = popup.querySelector('.cancel-btn');
+            const retryBtn = popup.querySelector('.retry-btn');
+            
+            // 替换按钮
+            replaceBtn.addEventListener('click', () => {
+                alert('替换按钮点击：将优化后的文本替换原文');
+                // 在实际应用中，这里会替换选中的文本
+            });
+            
+            // 取消按钮
+            cancelBtn.addEventListener('click', () => {
+                alert('取消按钮点击：关闭弹窗');
+                // 在实际应用中，这里会关闭弹窗
+            });
+            
+            // 重试按钮
+            retryBtn.addEventListener('click', () => {
+                alert('重试按钮点击：重新调用AI');
+                showLoadingState();
+                // 在实际应用中，这里会重新调用AI
+            });
+        }
+        
+        // 关闭弹窗
+        function closePopup() {
+            alert('关闭按钮点击：关闭弹窗');
+            // 在实际应用中，这里会关闭弹窗
+        }
+        
+        // 显示加载状态
+        function showLoadingState() {
+            const popup = document.getElementById('aiPopup');
+            
+            // 显示加载区域，隐藏结果区域
+            popup.querySelector('.loading-section').style.display = 'block';
+            popup.querySelector('.company-ai-result').style.display = 'none';
+            
+            // 禁用替换按钮，隐藏重试按钮
+            popup.querySelector('.replace-btn').disabled = true;
+            popup.querySelector('.retry-btn').style.display = 'none';
+        }
+        
+        // 显示成功结果
+        function showSuccessState() {
+            const popup = document.getElementById('aiPopup');
+            
+            // 隐藏加载区域，显示结果区域
+            popup.querySelector('.loading-section').style.display = 'none';
+            popup.querySelector('.company-ai-result').style.display = 'block';
+            
+            // 更新优化文案
+            popup.querySelector('.company-optimized-text').innerHTML = `投资有风险，请谨慎决策。在进行任何投资前，请充分了解相关产品的特性和风险。
+            
+市场波动可能影响投资回报，建议根据自身风险承受能力合理配置资产组合。
+
+注：以上内容基于专业金融分析，仅供参考。`;
+            
+            // 更新优化情况描述
+            const detailsList = popup.querySelector('.details-list');
+            detailsList.innerHTML = `
+                <li>处理时间：1245ms</li>
+                <li>调整字数：+28 字</li>
+                <li>后续建议：可以考虑添加具体的风险提示和免责声明</li>
+            `;
+            
+            // 启用替换按钮，隐藏重试按钮
+            popup.querySelector('.replace-btn').disabled = false;
+            popup.querySelector('.retry-btn').style.display = 'none';
+        }
+        
+        // 显示错误结果
+        function showErrorState() {
+            const popup = document.getElementById('aiPopup');
+            
+            // 隐藏加载区域，显示结果区域
+            popup.querySelector('.loading-section').style.display = 'none';
+            popup.querySelector('.company-ai-result').style.display = 'block';
+            
+            // 更新优化文案
+            popup.querySelector('.company-optimized-text').innerHTML = `❌ 公司AI调用失败`;
+            
+            // 更新优化情况描述
+            const detailsList = popup.querySelector('.details-list');
+            detailsList.innerHTML = `
+                <li>处理时间：3245ms</li>
+                <li>调整字数：0 字（优化失败）</li>
+                <li>后续建议：请检查API配置或网络连接</li>
+            `;
+            
+            // 禁用替换按钮，显示重试按钮
+            popup.querySelector('.replace-btn').disabled = true;
+            popup.querySelector('.retry-btn').style.display = 'inline-block';
+        }
+        
+        // 重置弹窗位置
+        function resetPopupPosition() {
+            const popup = document.getElementById('aiPopup');
+            popup.style.top = '50px';
+            popup.style.left = '50px';
+        }
+    </script>
+</body>
+</html>

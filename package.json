@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/react": "^19.1.11",
+    "webextension-polyfill-ts": "^0.26.0"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "openai": "^5.16.0"
+  }
+}

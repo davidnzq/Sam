@@ -1,0 +1,114 @@
+{
+  "cases": [
+    {
+      "id": "case-001",
+      "description": "基本语法校对测试",
+      "input": "系统正在处理您的请求,这可能需要几秒钟时间.请耐心等待,不要关闭页面或刷新浏览器.",
+      "scene": "console",
+      "mode": "proofread",
+      "strict": true,
+      "expected_hits": [
+        {
+          "rule": "CN-PUNC",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "case-002",
+      "description": "术语统一测试",
+      "input": "请确保您的 account 有足够的余额进行此操作。",
+      "scene": "console",
+      "mode": "optimize",
+      "strict": true,
+      "expected_hits": [
+        {
+          "rule": "GLOSSARY",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "case-003",
+      "description": "禁用词测试",
+      "input": "我们保证这项功能100%可靠，绝对不会出现任何问题。",
+      "scene": "console",
+      "mode": "optimize",
+      "strict": true,
+      "expected_hits": [
+        {
+          "rule": "BANNED_TERM",
+          "severity": "block"
+        }
+      ]
+    },
+    {
+      "id": "case-004",
+      "description": "数字单位空格测试",
+      "input": "当前存储空间已使用50GB，剩余容量为20%。",
+      "scene": "console",
+      "mode": "proofread",
+      "strict": false,
+      "expected_hits": [
+        {
+          "rule": "NUM-UNIT-SPACE",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "case-005",
+      "description": "营销场景测试",
+      "input": "我们的产品使用了最先进的AI技术,能够帮助您提高工作效率,节省时间和成本.",
+      "scene": "marketing",
+      "mode": "optimize",
+      "strict": true,
+      "expected_hits": [
+        {
+          "rule": "CN-PUNC",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "case-006",
+      "description": "通知场景测试",
+      "input": "您的账户余额不足,无法完成此次交易.请充值后重试,或联系客服获取帮助.",
+      "scene": "notification",
+      "mode": "proofread",
+      "strict": true,
+      "expected_hits": [
+        {
+          "rule": "CN-PUNC",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "case-007",
+      "description": "多种问题混合测试",
+      "input": "系统将在10s后自动logout您的account,请保存您的工作并确保100%完成.",
+      "scene": "console",
+      "mode": "optimize",
+      "strict": true,
+      "expected_hits": [
+        {
+          "rule": "NUM-UNIT-SPACE",
+          "severity": "warn"
+        },
+        {
+          "rule": "GLOSSARY",
+          "severity": "warn"
+        },
+        {
+          "rule": "CN-PUNC",
+          "severity": "warn"
+        },
+        {
+          "rule": "BANNED_TERM",
+          "severity": "block"
+        }
+      ]
+    }
+  ]
+}

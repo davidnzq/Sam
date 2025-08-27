@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景化优化系统演示</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .scenario-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .scenario-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+        
+        .scenario-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .scenario-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .scenario-card .description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .scenario-card .features {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-item .label {
+            font-weight: bold;
+            min-width: 120px;
+            margin-right: 20px;
+            color: #333;
+        }
+        
+        .result-item .content {
+            flex: 1;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
+        .comparison {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .comparison h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .metric-card .label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .instructions-panel {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .instructions-panel h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .instructions-list {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .instructions-list li {
+            margin-bottom: 5px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 场景化优化系统演示</h1>
+        <p>为不同平台提供专属的优化策略和AI指令</p>
+    </div>
+    
+    <div class="main-container">
+        <!-- 左侧：输入和配置 -->
+        <div class="panel">
+            <h2>🧪 测试配置</h2>
+            
+            <div class="input-group">
+                <label for="testText">测试文本：</label>
+                <textarea id="testText" rows="6" placeholder="请输入需要优化的文本内容...">这是一个关于投资理财的文案，我们需要优化它的表达方式，使其更加专业和清晰。投资有风险，收益不确定，请谨慎决策。</textarea>
+            </div>
+            
+            <div class="input-group">
+                <label for="scenarioType">选择场景：</label>
+                <select id="scenarioType">
+                    <option value="longport">LongPort (金融专业)</option>
+                    <option value="notion">Notion (文档协作)</option>
+                    <option value="social_media">社交媒体</option>
+                    <option value="ecommerce">电商产品</option>
+                    <option value="general">通用优化</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="customRequirements">自定义要求（可选）：</label>
+                <textarea id="customRequirements" rows="3" placeholder="输入额外的优化要求..."></textarea>
+            </div>
+            
+            <button class="btn" onclick="runScenarioOptimization()">
+                🚀 执行场景化优化
+            </button>
+            
+            <button class="btn btn-secondary" onclick="showAllScenarios()">
+                📋 查看所有场景
+            </button>
+            
+            <button class="btn btn-secondary" onclick="addNewScenario()">
+                ➕ 添加新场景
+            </button>
+        </div>
+        
+        <!-- 右侧：场景信息 -->
+        <div class="panel">
+            <h2>📊 场景信息</h2>
+            
+            <div id="scenarioInfo">
+                <p>请选择一个场景查看详细信息...</p>
+            </div>
+            
+            <div id="scenarioCards" class="scenario-cards" style="display: none;">
+                <!-- 场景卡片将在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 结果展示区域 -->
+    <div id="resultSection" class="panel" style="display: none;">
+        <h2>📊 优化结果</h2>
+        
+        <div class="result-section">
+            <div class="result-item">
+                <div class="label">场景：</div>
+                <div class="content" id="resultScenario"></div>
+            </div>
+            
+            <div class="result-item">
+                <div class="label">原始文本：</div>
+                <div class="content" id="originalText"></div>
+            </div>
+            
+            <div class="result-item">
+                <div class="label">优化后文本：</div>
+                <div class="content" id="optimizedText"></div>
+            </div>
+        </div>
+        
+        <!-- 质量指标 -->
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="value" id="lengthChange">0%</div>
+                <div class="label">长度变化</div>
+            </div>
+            <div class="metric-card">
+                <div class="value" id="improvementAreas">0</div>
+                <div class="label">改进领域</div>
+            </div>
+            <div class="metric-card">
+                <div class="value" id="optimizationTime">0ms</div>
+                <div class="label">优化耗时</div>
+            </div>
+        </div>
+        
+        <!-- AI指令展示 -->
+        <div class="instructions-panel">
+            <h4>🤖 AI优化指令</h4>
+            <div id="aiInstructions"></div>
+        </div>
+        
+        <!-- 优化详情 -->
+        <div class="comparison">
+            <h3>🔍 优化详情分析</h3>
+            <div id="optimizationDetails"></div>
+        </div>
+    </div>
+    
+    <!-- 引入场景化优化系统 -->
+    <script src="scenario-based-optimization.js"></script>
+    
+    <script>
+        let scenarioSystem;
+        
+        // 页面加载完成后初始化
+        window.addEventListener('load', () => {
+            scenarioSystem = new ScenarioBasedOptimization();
+            console.log('场景化优化系统已初始化');
+            
+            // 显示默认场景信息
+            showScenarioInfo('longport');
+            
+            // 监听场景选择变化
+            document.getElementById('scenarioType').addEventListener('change', (e) => {
+                showScenarioInfo(e.target.value);
+            });
+        });
+        
+        // 显示场景信息
+        function showScenarioInfo(scenarioKey) {
+            const scenario = scenarioSystem.getScenario(scenarioKey);
+            const scenarioInfo = document.getElementById('scenarioInfo');
+            
+            scenarioInfo.innerHTML = `
+                <h3>${scenario.name}</h3>
+                <p><strong>描述：</strong>${scenario.description}</p>
+                <p><strong>平台：</strong>${scenario.platform}</p>
+                
+                <h4>优化规则：</h4>
+                <ul>
+                    <li><strong>语调：</strong>${scenario.optimizationRules.tone}</li>
+                    <li><strong>语言：</strong>${scenario.optimizationRules.language}</li>
+                    <li><strong>风格：</strong>${scenario.optimizationRules.style}</li>
+                    <li><strong>目标用户：</strong>${scenario.optimizationRules.targetAudience}</li>
+                    <li><strong>合规要求：</strong>${scenario.optimizationRules.compliance}</li>
+                </ul>
+                
+                <h4>内容增强：</h4>
+                <ul>
+                    ${Object.entries(scenario.contentEnhancements).map(([key, values]) => 
+                        `<li><strong>${key}：</strong>${values.join('、')}</li>`
+                    ).join('')}
+                </ul>
+            `;
+        }
+        
+        // 显示所有场景
+        function showAllScenarios() {
+            const scenarios = scenarioSystem.getAllScenarios();
+            const cardsContainer = document.getElementById('scenarioCards');
+            
+            cardsContainer.innerHTML = scenarios.map(scenario => `
+                <div class="scenario-card">
+                    <h3>${scenario.name}</h3>
+                    <div class="description">${scenario.description}</div>
+                    <div class="features">
+                        <strong>平台：</strong>${scenario.platform}<br>
+                        <strong>语调：</strong>${scenario.optimizationRules.tone}<br>
+                        <strong>风格：</strong>${scenario.optimizationRules.style}
+                    </div>
+                </div>
+            `).join('');
+            
+            cardsContainer.style.display = 'grid';
+            document.getElementById('scenarioInfo').style.display = 'none';
+        }
+        
+        // 添加新场景
+        function addNewScenario() {
+            const key = prompt('请输入新场景的键名（如：blog, email）：');
+            if (!key) return;
+            
+            const name = prompt('请输入新场景的名称：');
+            if (!name) return;
+            
+            const description = prompt('请输入新场景的描述：');
+            if (!description) return;
+            
+            const newScenario = {
+                name: name,
+                description: description,
+                platform: 'custom',
+                optimizationRules: {
+                    tone: 'custom',
+                    language: 'zh-CN',
+                    style: 'custom',
+                    targetAudience: 'custom_users',
+                    compliance: 'custom_standards'
+                },
+                aiInstructions: [
+                    '根据自定义要求进行内容优化',
+                    '保持原文核心含义',
+                    '提升表达清晰度'
+                ],
+                contentEnhancements: {
+                    custom: ['自定义优化', '个性化改进']
+                }
+            };
+            
+            scenarioSystem.addScenario(key, newScenario);
+            alert(`新场景 "${name}" 添加成功！`);
+            
+            // 更新场景选择器
+            updateScenarioSelector();
+        }
+        
+        // 更新场景选择器
+        function updateScenarioSelector() {
+            const selector = document.getElementById('scenarioType');
+            const scenarios = scenarioSystem.getAllScenarios();
+            
+            selector.innerHTML = scenarios.map(scenario => 
+                `<option value="${scenario.key}">${scenario.name}</option>`
+            ).join('');
+        }
+        
+        // 执行场景化优化
+        async function runScenarioOptimization() {
+            const testText = document.getElementById('testText').value.trim();
+            const scenarioType = document.getElementById('scenarioType').value;
+            const customRequirements = document.getElementById('customRequirements').value.trim();
+            
+            if (!testText) {
+                alert('请输入测试文本');
+                return;
+            }
+            
+            console.log('开始场景化优化...');
+            console.log('场景:', scenarioType);
+            console.log('文本:', testText);
+            
+            const startTime = Date.now();
+            
+            try {
+                // 执行场景化优化
+                const result = await scenarioSystem.executeScenarioOptimization(
+                    scenarioType, 
+                    testText, 
+                    customRequirements ? JSON.parse(customRequirements) : {}
+                );
+                
+                const endTime = Date.now();
+                const processingTime = endTime - startTime;
+                
+                if (result.success) {
+                    displayOptimizationResult(result, processingTime);
+                } else {
+                    alert(`优化失败: ${result.error}`);
+                }
+                
+            } catch (error) {
+                console.error('场景化优化执行失败:', error);
+                alert(`执行失败: ${error.message}`);
+            }
+        }
+        
+        // 显示优化结果
+        function displayOptimizationResult(result, processingTime) {
+            // 显示结果区域
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // 填充结果
+            document.getElementById('resultScenario').textContent = result.scenario;
+            document.getElementById('originalText').textContent = result.originalText;
+            document.getElementById('optimizedText').textContent = result.optimizedText;
+            
+            // 更新指标
+            document.getElementById('lengthChange').textContent = result.qualityMetrics.lengthChange;
+            document.getElementById('improvementAreas').textContent = result.qualityMetrics.improvementAreas.length;
+            document.getElementById('optimizationTime').textContent = processingTime + 'ms';
+            
+            // 显示AI指令
+            const aiInstructions = document.getElementById('aiInstructions');
+            aiInstructions.innerHTML = `
+                <strong>基础指令：</strong>
+                <ul class="instructions-list">
+                    ${result.optimizationDetails.instructions.base.map(instruction => 
+                        `<li>${instruction}</li>`
+                    ).join('')}
+                </ul>
+                
+                ${result.optimizationDetails.instructions.dynamic.length > 0 ? `
+                    <strong>动态指令：</strong>
+                    <ul class="instructions-list">
+                        ${result.optimizationDetails.instructions.dynamic.map(instruction => 
+                            `<li>${instruction}</li>`
+                        ).join('')}
+                    </ul>
+                ` : ''}
+            `;
+            
+            // 显示优化详情
+            const optimizationDetails = document.getElementById('optimizationDetails');
+            optimizationDetails.innerHTML = `
+                <p><strong>优化规则：</strong></p>
+                <ul>
+                    ${Object.entries(result.optimizationDetails.rules).map(([key, value]) => 
+                        `<li><strong>${key}：</strong>${value}</li>`
+                    ).join('')}
+                </ul>
+                
+                <p><strong>内容增强：</strong></p>
+                <ul>
+                    ${Object.entries(result.optimizationDetails.enhancements).map(([key, values]) => 
+                        `<li><strong>${key}：</strong>${values.join('、')}</li>`
+                    ).join('')}
+                </ul>
+                
+                <p><strong>质量标准：</strong></p>
+                <ul>
+                    ${Object.entries(result.optimizationDetails.quality_standards).map(([key, value]) => 
+                        `<li><strong>${key}：</strong>${value}</li>`
+                    ).join('')}
+                </ul>
+            `;
+            
+            // 滚动到结果区域
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        console.log('场景化优化系统演示页面已加载');
+    </script>
+</body>
+</html>

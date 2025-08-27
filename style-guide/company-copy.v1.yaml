@@ -1,0 +1,213 @@
+version: 1.0.0
+locales: 
+  - zh-CN
+
+meta:
+  author: LongPort AI Team
+  updated: 2025-08-27
+
+# 品牌声音与语调
+brand:
+  voice:
+    - 专业
+    - 清晰
+    - 简洁
+    - 友好
+  tone:
+    - 保持克制
+    - 避免过度营销
+    - 避免夸张表述
+    - 避免绝对化表达
+
+# 场景定义
+scenes:
+  # 产品内文案（控制台、功能页面等）
+  console:
+    tone:
+      - 清晰
+      - 专业
+      - 精确
+    glossary:
+      account: 账户
+      logout: 登出
+      login: 登录
+      password: 密码
+      username: 用户名
+      settings: 设置
+      dashboard: 控制台
+      profile: 个人资料
+      notification: 通知
+      message: 消息
+    banned_terms:
+      - 100%
+      - 保证
+      - 绝对
+      - 承诺
+    rules:
+      - id: CN-PUNC
+        desc: 使用中文全角标点
+        type: style
+      - id: NUM-UNIT-SPACE
+        desc: 数字与单位之间需要空格
+        type: format
+      - id: GLOSSARY
+        desc: 使用统一术语表达
+        type: term
+
+  # 营销文案（官网、活动页等）
+  marketing:
+    tone:
+      - 专业
+      - 友好
+      - 简洁
+    glossary:
+      account: 账户
+      solution: 解决方案
+      platform: 平台
+      service: 服务
+      feature: 功能
+      benefit: 优势
+      pricing: 价格
+    banned_terms:
+      - 100%
+      - 绝对
+      - 最好的
+      - 唯一的
+    rules:
+      - id: CN-PUNC
+        desc: 使用中文全角标点
+        type: style
+      - id: NUM-UNIT-SPACE
+        desc: 数字与单位之间需要空格
+        type: format
+      - id: GLOSSARY
+        desc: 使用统一术语表达
+        type: term
+
+  # 通知文案（系统通知、提醒等）
+  notification:
+    tone:
+      - 简洁
+      - 清晰
+      - 友好
+    glossary:
+      account: 账户
+      logout: 登出
+      login: 登录
+      password: 密码
+      username: 用户名
+    banned_terms:
+      - 100%
+      - 保证
+      - 绝对
+    rules:
+      - id: CN-PUNC
+        desc: 使用中文全角标点
+        type: style
+      - id: NUM-UNIT-SPACE
+        desc: 数字与单位之间需要空格
+        type: format
+      - id: GLOSSARY
+        desc: 使用统一术语表达
+        type: term
+
+# 语法与风格规则
+grammar_style_rules:
+  - id: SENTENCE-LENGTH
+    desc: 句子长度不超过40个字符
+    severity: warn
+  - id: PARAGRAPH-LENGTH
+    desc: 段落不超过4个句子
+    severity: warn
+  - id: ACTIVE-VOICE
+    desc: 优先使用主动语态
+    severity: warn
+  - id: SIMPLE-WORDS
+    desc: 使用简单易懂的词汇
+    severity: warn
+
+# 时间格式规范
+time_formats:
+  date: YYYY年MM月DD日
+  time: HH:mm
+  datetime: YYYY年MM月DD日 HH:mm
+  relative:
+    - 刚刚
+    - X分钟前
+    - X小时前
+    - X天前
+    - YYYY年MM月DD日
+
+# UI文案规范
+ui_guidelines:
+  button:
+    - 使用动词开头，如"保存"、"取消"
+    - 不超过4个字符
+    - 避免使用"确定"等模糊词汇
+  tooltip:
+    - 简洁明了，不超过20个字符
+    - 解释功能而非重复按钮文字
+  placeholder:
+    - 提供输入示例或格式说明
+    - 不使用"请输入"等废话开头
+
+# 营销文案规范
+promo_guidelines:
+  headline:
+    - 不超过20个字符
+    - 突出核心价值
+    - 避免过度承诺
+  cta:
+    - 使用行动导向词汇
+    - 创造紧迫感但不夸张
+    - 与页面内容相关
+
+# 命名规范
+naming:
+  product:
+    - 使用英文名称，不翻译
+    - 首字母大写
+  feature:
+    - 简洁明了
+    - 反映功能本质
+    - 避免技术术语
+
+# 禁用词列表
+forbidden_words:
+  - 100%
+  - 绝对
+  - 保证
+  - 承诺
+  - 最好的
+  - 唯一的
+  - 完美
+  - 终极
+  - 一流
+  - 顶级
+
+# 首选拼写
+preferred_spelling:
+  - AI（不是"人工智能"）
+  - App（不是"应用程序"）
+  - UI（不是"用户界面"）
+  - API（不是"应用程序接口"）
+
+# 术语示例
+term_examples:
+  - term: 登录
+    not: 登陆
+    note: 登录是进入系统，登陆是船只靠岸
+  - term: 账户
+    not: 账号
+    note: 在金融场景中使用账户
+  - term: 设置
+    not: 设定
+    note: 用户可配置的选项使用设置
+
+# 防护栏
+guardrails:
+  - 不做绝对承诺
+  - 不使用夸张表述
+  - 不使用技术行话
+  - 不使用歧视性语言
+  - 不违反法律法规

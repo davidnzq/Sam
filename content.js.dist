@@ -1,0 +1,1226 @@
+(async () => {
+    const { enabled, theme } = await chrome.storage.sync.get(['enabled', 'theme']);
+    if (!enabled)
+        return;
+    document.documentElement.dataset.myStarterTheme = theme;
+})();
+// 金融术语词典（可扩展）
+const FIN_TERMS = {
+    "市盈率": {
+        explain: "市盈率是公司市值与其年度净利润的比值，反映投资回本周期。",
+        analogy: "就像你投资一个小店，市盈率越低，回本越快。"
+    },
+    "净资产收益率": {
+        explain: "净资产收益率衡量公司用自有资金赚取利润的能力。",
+        analogy: "像你用自己的钱做生意，赚得越多，能力越强。"
+    },
+    "市净率": {
+        explain: "市净率通常指股价与每股净资产的比值，反映市场对公司账面资产的溢价或折价程度。",
+        analogy: "像买一套二手房，用成交价对比房产证上的'账面价值'，溢价越高，大家对它未来越看好。"
+    },
+    "量比": {
+        explain: "量比是当前成交量与一段时间（如过去5个交易日）平均每分钟成交量之比，用于衡量当日相对成交活跃度。",
+        analogy: "好比商场的人流量，今天同一时段比平时更拥挤，说明更热闹、更受关注。"
+    },
+    "换手率": {
+        explain: "换手率是在一定时期内股票换手的频率，常用成交股数与流通股本之比衡量，显示筹码更迭和活跃度。",
+        analogy: "像图书馆一本热门书被借来还去的频率，借得越多，越说明大家在关注和讨论。"
+    },
+    "振幅": {
+        explain: "振幅刻画一定周期内价格波动的幅度（如当日最高价与最低价的差额相对昨收），体现市场波动强弱。",
+        analogy: "就像一天里最高温和最低温的温差，温差越大，体感起伏越明显。"
+    },
+};
+// 用户自定义词条存储
+let customTerms = {};
+// 已掌握的词条存储
+let masteredTerms = new Set();
+let tooltipTimeoutId = null;
+// 加载词条数据
+async function loadTermsData() {
+    try {
+        const { masteredTerms: stored, customTerms: storedCustom } = await chrome.storage.sync.get(['masteredTerms', 'customTerms']);
+        masteredTerms = new Set(stored || []);
+        customTerms = storedCustom || {};
+    }
+    catch (error) {
+        console.error('Failed to load terms data:', error);
+        masteredTerms = new Set();
+        customTerms = {};
+    }
+}
+// 保存词条数据
+async function saveTermsData() {
+    try {
+        await chrome.storage.sync.set({
+            masteredTerms: Array.from(masteredTerms),
+            customTerms: customTerms
+        });
+    }
+    catch (error) {
+        console.error('Failed to save terms data:', error);
+    }
+}
+// 标记词条为已掌握
+async function markTermAsMastered(term) {
+    masteredTerms.add(term);
+    await saveTermsData();
+    // 移除页面上的高亮
+    const highlights = document.querySelectorAll(`[data-yiyuan-term="${term}"]`);
+    highlights.forEach(highlight => {
+        const parent = highlight.parentNode;
+        if (parent) {
+            parent.replaceChild(document.createTextNode(term), highlight);
+            parent.normalize(); // 合并相邻的文本节点
+        }
+    });
+    // 隐藏弹窗
+    hideTooltip();
+    // 通知background script更新侧边栏
+    chrome.runtime.sendMessage({ type: 'TERM_MASTERED', term });
+}
+// 取消词条的已掌握状态
+async function unmarkTermAsMastered(term) {
+    masteredTerms.delete(term);
+    await saveTermsData();
+    // 重新扫描页面以高亮该词条
+    triggerScanDebounced(0);
+    // 通知background script更新侧边栏
+    chrome.runtime.sendMessage({ type: 'TERM_UNMASTERED', term });
+}
+// 添加自定义词条
+async function addCustomTerm(term, explain, analogy) {
+    customTerms[term] = {
+        explain,
+        analogy,
+        createdAt: Date.now()
+    };
+    await saveTermsData();
+    // 重新扫描页面以高亮新词条
+    triggerScanDebounced(0);
+}
+// 调用 ChatGPT API 生成解读和类比（通过后台调用，规避内容脚本的CORS问题）
+async function generateTermExplanation(term) {
+    try {
+        // 检查扩展是否可用
+        if (!chrome.runtime || !chrome.runtime.id) {
+            console.warn('扩展上下文不可用，使用本地备用解读');
+            return generateFallbackExplanation(term);
+        }
+        const resp = await new Promise((resolve, reject) => {
+            try {
+                chrome.runtime.sendMessage({ type: 'AI_GENERATE_EXPLANATION', term }, (res) => {
+                    if (chrome.runtime.lastError) {
+                        // 处理扩展上下文失效等错误
+                        const errorMessage = chrome.runtime.lastError.message || 'Unknown error';
+                        if (errorMessage.includes('Extension context invalidated')) {
+                            reject(new Error('扩展已重新加载，请刷新页面重试'));
+                        }
+                        else {
+                            reject(new Error(errorMessage));
+                        }
+                        return;
+                    }
+                    resolve(res || { ok: false, error: 'empty response' });
+                });
+            }
+            catch (error) {
+                reject(error);
+            }
+        });
+        if (resp.ok && resp.data) {
+            return resp.data;
+        }
+        console.warn('后台AI生成失败，使用本地备用：', resp.error);
+        return generateFallbackExplanation(term);
+    }
+    catch (error) {
+        console.error('调用后台AI失败：', error);
+        // 根据错误类型提供更友好的提示
+        if (error.message.includes('Extension context invalidated') ||
+            error.message.includes('扩展已重新加载')) {
+            console.warn('扩展上下文失效，建议刷新页面');
+        }
+        return generateFallbackExplanation(term);
+    }
+}
+// 备用方案：生成基础解读和类比
+function generateFallbackExplanation(term) {
+    // 检测术语语言
+    const isEnglish = /^[a-zA-Z\s]+$/.test(term.trim());
+    if (isEnglish) {
+        // 英文术语的双语解读
+        const englishTemplates = [
+            {
+                explain: `${term} is an important concept in the financial field, typically used to measure and analyze related financial indicators. (${term}是金融领域的一个重要概念，通常用于衡量和分析相关的金融指标。)`,
+                analogy: `Just as a thermometer measures temperature, ${term} helps us understand the state of financial markets. (就像温度计测量温度一样，${term}帮助我们了解金融市场的状态。)`
+            },
+            {
+                explain: `${term} reflects certain patterns or characteristics in financial markets and serves as an important reference for investment decisions. (${term}反映了金融市场中的某种规律或特征，是投资决策的重要参考。)`,
+                analogy: `Like weather forecasts help us plan our trips, ${term} helps us make investment decisions. (就像天气预报帮助我们安排出行一样，${term}帮助我们做出投资决策。)`
+            },
+            {
+                explain: `${term} is a financial analysis tool that helps us better understand market dynamics and trends. (${term}是金融分析工具，能够帮助我们更好地理解市场动态和趋势。)`,
+                analogy: `Just as a compass guides direction, ${term} guides us to find the right investment direction in financial markets. (就像指南针指引方向一样，${term}指引我们在金融市场中找到正确的投资方向。)`
+            }
+        ];
+        const randomIndex = Math.floor(Math.random() * englishTemplates.length);
+        return englishTemplates[randomIndex];
+    }
+    else {
+        // 中文术语的中文解读
+        const chineseTemplates = [
+            {
+                explain: `${term}是金融领域的一个重要概念，通常用于衡量和分析相关的金融指标。`,
+                analogy: `就像测量温度需要温度计一样，${term}帮助我们了解金融市场的状态。`
+            },
+            {
+                explain: `${term}反映了金融市场中的某种规律或特征，是投资决策的重要参考。`,
+                analogy: `就像天气预报帮助我们安排出行一样，${term}帮助我们做出投资决策。`
+            },
+            {
+                explain: `${term}是金融分析工具，能够帮助我们更好地理解市场动态和趋势。`,
+                analogy: `就像指南针指引方向一样，${term}指引我们在金融市场中找到正确的投资方向。`
+            }
+        ];
+        const randomIndex = Math.floor(Math.random() * chineseTemplates.length);
+        return chineseTemplates[randomIndex];
+    }
+}
+// 获取所有词条（内置 + 自定义）
+function getAllTerms() {
+    return { ...FIN_TERMS, ...customTerms };
+}
+// 检查文本是否为有效文本且不超过15个字符
+function isValidText(text) {
+    const trimmedText = text.trim();
+    const totalLength = trimmedText.length;
+    // 检查长度限制
+    if (totalLength > 15) {
+        return false;
+    }
+    // 检查是否包含有效字符（中文、英文、数字、空格）
+    const validCharRegex = /^[\u4e00-\u9fa5a-zA-Z0-9\s]+$/;
+    if (!validCharRegex.test(trimmedText)) {
+        return false;
+    }
+    // 检查是否至少包含一个有效字符（中文或英文）
+    const hasChinese = /[\u4e00-\u9fa5]/.test(trimmedText);
+    const hasEnglish = /[a-zA-Z]/.test(trimmedText);
+    return hasChinese || hasEnglish;
+}
+// 检查文本是否为中文且不超过15个字符（保持向后兼容）
+function isValidChineseText(text) {
+    // 允许中文、数字、英文和空格，但主要字符必须是中文
+    const chineseRegex = /^[\u4e00-\u9fa5\s\w]+$/;
+    const chineseCount = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+    const totalLength = text.trim().length;
+    // 主要字符必须是中文，且总长度不超过15个字符
+    return chineseCount > 0 && chineseCount >= totalLength * 0.6 && totalLength <= 15;
+}
+// 创建右键菜单
+function createContextMenu() {
+    // 移除已存在的右键菜单
+    const existingMenu = document.getElementById('fin-terms-context-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
+    const menu = document.createElement('div');
+    menu.id = 'fin-terms-context-menu';
+    menu.className = 'fin-terms-context-menu';
+    menu.style.display = 'none';
+    document.body.appendChild(menu);
+    return menu;
+}
+// 显示右键菜单
+function showContextMenu(x, y, selectedText) {
+    const menu = createContextMenu();
+    menu.innerHTML = `
+    <div class="context-menu-item" data-action="explain" data-text="${selectedText}">
+      <span class="context-menu-icon">📖</span>
+      解读
+    </div>
+  `;
+    // 添加事件监听
+    const explainItem = menu.querySelector('[data-action="explain"]');
+    if (explainItem) {
+        explainItem.addEventListener('click', () => {
+            showCustomTermTooltip(selectedText, { x, y });
+            hideContextMenu();
+        });
+    }
+    // 定位菜单
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.style.display = 'block';
+}
+// 隐藏右键菜单
+function hideContextMenu() {
+    const menu = document.getElementById('fin-terms-context-menu');
+    if (menu) {
+        menu.style.display = 'none';
+    }
+}
+// 显示自定义词条弹窗
+function showCustomTermTooltip(term, position) {
+    const allTerms = getAllTerms();
+    const existingTerm = allTerms[term];
+    if (existingTerm) {
+        // 如果词条已存在，显示解读弹窗
+        const rect = {
+            left: position.x,
+            top: position.y,
+            right: position.x + 100,
+            bottom: position.y + 20
+        };
+        // 检查是否为已掌握的词条
+        if (masteredTerms.has(term)) {
+            // 如果是已掌握的词条，显示解读弹窗并取消掌握状态
+            showTooltip(term, rect);
+            // 延迟取消掌握状态，避免弹窗立即消失
+            setTimeout(() => {
+                unmarkTermAsMastered(term);
+            }, 100);
+        }
+        else {
+            // 普通词条直接显示解读弹窗
+            showTooltip(term, rect);
+        }
+    }
+    else {
+        // 如果词条不存在，直接显示AI生成的解读弹窗
+        showNewTermTooltip(term, position);
+    }
+}
+// 显示添加词条弹窗
+function showAddTermTooltip(term, position) {
+    const host = getTooltip();
+    if (!tooltipContentEl)
+        return;
+    tooltipContentEl.innerHTML = `
+    <h4 class="title">添加新词条：${term}</h4>
+    <div class="section">
+      <div class="label">解读</div>
+      <textarea class="explain-input" placeholder="请输入词条解读..." rows="3"></textarea>
+    </div>
+    <div class="section">
+      <div class="label">类比</div>
+      <textarea class="analogy-input" placeholder="请输入类比说明..." rows="2"></textarea>
+    </div>
+    <div class="button-group">
+      <button class="auto-generate-button" data-term="${term}">🤖 AI自动生成</button>
+    </div>
+    <div class="button-group">
+      <button class="add-button" data-term="${term}">添加词条</button>
+      <button class="cancel-button">取消</button>
+    </div>
+  `;
+    // 添加事件监听
+    const addButton = tooltipContentEl.querySelector('.add-button');
+    const cancelButton = tooltipContentEl.querySelector('.cancel-button');
+    const autoGenerateButton = tooltipContentEl.querySelector('.auto-generate-button');
+    const explainInput = tooltipContentEl.querySelector('.explain-input');
+    const analogyInput = tooltipContentEl.querySelector('.analogy-input');
+    // AI自动生成按钮事件
+    if (autoGenerateButton) {
+        autoGenerateButton.addEventListener('click', async () => {
+            autoGenerateButton.textContent = '🔄 生成中...';
+            autoGenerateButton.disabled = true;
+            try {
+                const result = await generateTermExplanation(term);
+                if (result) {
+                    explainInput.value = result.explain;
+                    analogyInput.value = result.analogy;
+                    showSuccessMessage('AI解读生成成功！');
+                }
+                else {
+                    showErrorMessage('AI生成失败，请手动填写');
+                }
+            }
+            catch (error) {
+                console.error('AI生成失败:', error);
+                showErrorMessage('AI生成失败，请手动填写');
+            }
+            finally {
+                autoGenerateButton.textContent = '🤖 AI自动生成';
+                autoGenerateButton.disabled = false;
+            }
+        });
+    }
+    if (addButton) {
+        addButton.addEventListener('click', async () => {
+            const explain = explainInput.value.trim();
+            const analogy = analogyInput.value.trim();
+            if (explain && analogy) {
+                await addCustomTerm(term, explain, analogy);
+                hideTooltip();
+                // 显示成功提示
+                showSuccessMessage('词条添加成功！');
+            }
+            else {
+                showErrorMessage('请填写完整的解读和类比信息');
+            }
+        });
+    }
+    if (cancelButton) {
+        cancelButton.addEventListener('click', () => {
+            hideTooltip();
+        });
+    }
+    host.style.display = 'block';
+    host.style.left = `${position.x}px`;
+    host.style.top = `${position.y + 20}px`;
+    // 清除之前的定时器
+    if (tooltipTimeoutId) {
+        clearTimeout(tooltipTimeoutId);
+        tooltipTimeoutId = null;
+    }
+}
+// 显示新增词条的解读弹窗（AI生成内容）
+async function showNewTermTooltip(term, position) {
+    const host = getTooltip();
+    if (!tooltipContentEl)
+        return;
+    // 先显示加载状态
+    tooltipContentEl.innerHTML = `
+    <h4 class="title">新词条解读：${term}</h4>
+    <div class="section">
+      <div class="label">解读</div>
+      <div class="loading-text">🔄 AI正在生成解读内容...</div>
+    </div>
+    <div class="section">
+      <div class="label">类比</div>
+      <div class="loading-text">🔄 AI正在生成类比内容...</div>
+    </div>
+    <div class="button-group">
+      <button class="add-button" data-term="${term}">添加词条</button>
+      <button class="cancel-button">取消</button>
+    </div>
+  `;
+    host.style.display = 'block';
+    host.style.left = `${position.x}px`;
+    host.style.top = `${position.y + 20}px`;
+    // 自动生成AI内容
+    try {
+        const result = await generateTermExplanation(term);
+        if (result) {
+            tooltipContentEl.innerHTML = `
+        <h4 class="title">新词条解读：${term}</h4>
+        <div class="section">
+          <div class="label">解读</div>
+          <div class="text">${result.explain}</div>
+        </div>
+        <div class="section">
+          <div class="label">类比</div>
+          <div class="text">${result.analogy}</div>
+        </div>
+        <div class="button-group">
+          <button class="add-button" data-term="${term}">添加词条</button>
+          <button class="cancel-button">取消</button>
+        </div>
+      `;
+            // 重新绑定事件
+            const addButton = tooltipContentEl.querySelector('.add-button');
+            const cancelButton = tooltipContentEl.querySelector('.cancel-button');
+            if (addButton) {
+                addButton.addEventListener('click', async () => {
+                    await addCustomTerm(term, result.explain, result.analogy);
+                    hideTooltip();
+                    showSuccessMessage('词条添加成功！');
+                });
+            }
+            if (cancelButton) {
+                cancelButton.addEventListener('click', () => {
+                    hideTooltip();
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.error('AI生成失败:', error);
+        // 如果AI生成失败，显示手动输入界面
+        showAddTermTooltip(term, position);
+    }
+    // 清除之前的定时器
+    if (tooltipTimeoutId) {
+        clearTimeout(tooltipTimeoutId);
+        tooltipTimeoutId = null;
+    }
+}
+// 显示成功消息
+function showSuccessMessage(message) {
+    showMessage(message, 'success');
+}
+// 显示错误消息
+function showErrorMessage(message) {
+    showMessage(message, 'error');
+}
+// 显示消息提示
+function showMessage(message, type) {
+    const messageEl = document.createElement('div');
+    messageEl.className = `fin-terms-message fin-terms-message-${type}`;
+    messageEl.textContent = message;
+    document.body.appendChild(messageEl);
+    setTimeout(() => {
+        messageEl.remove();
+    }, 3000);
+}
+// —— 样式 ——
+function ensureStyles() {
+    if (document.getElementById('yiyuan-style'))
+        return;
+    const style = document.createElement('style');
+    style.id = 'yiyuan-style';
+    style.textContent = `
+  .yiyuan-highlight { background: #fff3bf; border-bottom: 1px dashed #c59f00; cursor: help; }
+  .yiyuan-highlight.mastered { background: #e8f5e8; border-bottom: 1px dashed #4caf50; }
+  /* tooltip 的基础类（宿主不使用此类渲染，样式以 Shadow DOM 注入为主；这里保留兜底）*/
+  .yiyuan-tooltip { position: fixed; max-width: 360px; background: #fff; border: 1px solid #d0d0d0; box-shadow: 0 4px 14px rgba(0,0,0,0.15); padding: 12px 14px; z-index: 999999; font-size: 13px; line-height: 1.4; border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .yiyuan-tooltip .yiyuan-highlight { background: transparent !important; border: 0 !important; cursor: default; }
+  
+  /* 右键菜单样式 */
+  .fin-terms-context-menu {
+    position: fixed;
+    background: #fff;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    z-index: 999997;
+    min-width: 120px;
+    padding: 8px 0;
+  }
+  .context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+  .context-menu-item:hover {
+    background: #f5f5f5;
+  }
+  .context-menu-icon {
+    font-size: 14px;
+  }
+  
+  /* 消息提示样式 */
+  .fin-terms-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    z-index: 999999;
+    animation: slideIn 0.3s ease;
+  }
+  .fin-terms-message-success {
+    background: #4caf50;
+  }
+  .fin-terms-message-error {
+    background: #f44336;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  /* 侧边栏样式 */
+  .fin-terms-sidebar {
+    position: fixed;
+    top: 0;
+    right: -500px;
+    width: 500px;
+    height: 100vh;
+    background: #fff;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    z-index: 999998;
+    transition: right 0.3s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  .fin-terms-sidebar.open {
+    right: 0;
+  }
+  .fin-terms-sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    background: #f8f9fa;
+  }
+  .fin-terms-sidebar-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  .fin-terms-sidebar-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+  }
+  .fin-terms-sidebar-content {
+    padding: 20px;
+    overflow-y: auto;
+    height: calc(100vh - 80px);
+  }
+  
+  /* Tab 样式 */
+  .fin-terms-tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+  }
+  .fin-terms-tab {
+    padding: 12px 20px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 14px;
+    color: #666;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .fin-terms-tab.active {
+    color: #333;
+    border-bottom-color: #4caf50;
+  }
+  .fin-terms-tab-content {
+    display: none;
+  }
+  .fin-terms-tab-content.active {
+    display: block;
+  }
+  
+  .mastered-term-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+  }
+  .mastered-term-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  .mastered-term-explain {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .mastered-term-date {
+    color: #999;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .no-mastered-terms {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+  }
+  
+  .custom-term-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: #f0f8ff;
+    border-radius: 8px;
+    border-left: 4px solid #2196f3;
+  }
+  .custom-term-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  .custom-term-explain {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .custom-term-date {
+    color: #999;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .no-custom-terms {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+  }
+  `;
+    document.head.appendChild(style);
+}
+// —— 工具 ——
+function escapeRegExp(input) {
+    return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+// 安全获取事件目标的 Element（有些站点可能触发 Text/Comment 节点作为 target）
+function getEventElement(e) {
+    // Prefer composedPath for Shadow DOM robustness
+    const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+    const elFromPath = path.find(n => n instanceof Element);
+    if (elFromPath)
+        return elFromPath;
+    const t = e.target;
+    if (t instanceof Element)
+        return t;
+    if (t && t.nodeType === Node.TEXT_NODE)
+        return t.parentElement;
+    return null;
+}
+// Shadow DOM tooltip
+let tooltipHost = null;
+let tooltipContentEl = null;
+function getTooltip() {
+    if (!tooltipHost) {
+        tooltipHost = document.createElement('div');
+        tooltipHost.setAttribute('data-yiyuan-skip', '1');
+        tooltipHost.style.position = 'fixed';
+        tooltipHost.style.zIndex = '999999';
+        tooltipHost.style.display = 'none';
+        document.body.appendChild(tooltipHost);
+        const shadowRoot = tooltipHost.attachShadow({ mode: 'open' });
+        const style = document.createElement('style');
+        style.textContent = `
+      :host { all: initial; }
+      .tooltip { max-width: 380px; background: #fff; border: 1px solid #d0d0d0; box-shadow: 0 4px 14px rgba(0,0,0,0.15); padding: 12px 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; font-size: 13px; line-height: 1.7; border-radius: 8px; color: #222; }
+      .title { display: block; margin: 0 0 10px 0; font-weight: 700; font-size: 18px; line-height: 1.45; color: #111; }
+      .section { margin-top: 10px; }
+      .label { font-weight: 600; margin-bottom: 4px; color: #111; }
+      .text { color: #333; white-space: normal; }
+      .loading-text { 
+        color: #666; 
+        font-style: italic; 
+        text-align: center; 
+        padding: 20px 0;
+      }
+      .explain-input, .analogy-input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: inherit;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      .explain-input:focus, .analogy-input:focus {
+        outline: none;
+        border-color: #4caf50;
+      }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+      .add-button, .cancel-button, .auto-generate-button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background 0.2s;
+        flex: 1;
+      }
+      .auto-generate-button {
+        background: #2196f3;
+        color: white;
+        margin-bottom: 8px;
+        width: 100%;
+      }
+      .auto-generate-button:hover { background: #1976d2; }
+      .auto-generate-button:active { background: #1565c0; }
+      .auto-generate-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .add-button {
+        background: #4caf50;
+        color: white;
+      }
+      .add-button:hover { background: #45a049; }
+      .add-button:active { background: #3d8b40; }
+      .cancel-button {
+        background: #f5f5f5;
+        color: #333;
+      }
+      .cancel-button:hover { background: #e8e8e8; }
+      .master-button { 
+        margin-top: 15px; 
+        padding: 8px 16px; 
+        background: #4caf50; 
+        color: white; 
+        border: none; 
+        border-radius: 6px; 
+        cursor: pointer; 
+        font-size: 14px; 
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+      .master-button:hover { background: #45a049; }
+      .master-button:active { background: #3d8b40; }
+    `;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tooltip';
+        tooltipContentEl = document.createElement('div');
+        wrapper.appendChild(tooltipContentEl);
+        shadowRoot.appendChild(style);
+        shadowRoot.appendChild(wrapper);
+    }
+    return tooltipHost;
+}
+function showTooltip(term, anchorRect) {
+    const allTerms = getAllTerms();
+    const data = allTerms[term];
+    if (!data)
+        return;
+    const host = getTooltip();
+    if (!tooltipContentEl)
+        return;
+    tooltipContentEl.innerHTML = `
+    <h4 class="title">${term}</h4>
+    <div class="section">
+      <div class="label">解读</div>
+      <div class="text">${data.explain}</div>
+    </div>
+    <div class="section">
+      <div class="label">类比</div>
+      <div class="text">${data.analogy}</div>
+    </div>
+    <button class="master-button" data-term="${term}">掌握</button>
+  `;
+    // 添加掌握按钮事件
+    const masterButton = tooltipContentEl.querySelector('.master-button');
+    if (masterButton) {
+        masterButton.addEventListener('click', () => {
+            markTermAsMastered(term);
+        });
+    }
+    host.style.display = 'block';
+    const desiredLeft = anchorRect.right + 8;
+    const maxLeft = Math.max(8, Math.min(desiredLeft, window.innerWidth - host.offsetWidth - 8));
+    const desiredTop = Math.max(8, Math.min(anchorRect.top, window.innerHeight - host.offsetHeight - 8));
+    host.style.left = `${maxLeft}px`;
+    host.style.top = `${desiredTop}px`;
+    // 清除之前的定时器
+    if (tooltipTimeoutId) {
+        clearTimeout(tooltipTimeoutId);
+        tooltipTimeoutId = null;
+    }
+}
+function hideTooltip() {
+    if (tooltipHost) {
+        // 设置延迟隐藏，给用户时间移动到弹窗上
+        tooltipTimeoutId = window.setTimeout(() => {
+            if (tooltipHost) {
+                tooltipHost.style.display = 'none';
+            }
+        }, 500); // 从300ms改为500ms
+    }
+}
+function cancelHideTooltip() {
+    if (tooltipTimeoutId) {
+        clearTimeout(tooltipTimeoutId);
+        tooltipTimeoutId = null;
+    }
+}
+// 侧边栏管理
+let sidebar = null;
+function createSidebar() {
+    if (sidebar)
+        return sidebar;
+    sidebar = document.createElement('div');
+    sidebar.className = 'fin-terms-sidebar';
+    sidebar.setAttribute('data-fin-skip', '1');
+    sidebar.innerHTML = `
+    <div class="fin-terms-sidebar-header">
+      <h2 class="fin-terms-sidebar-title">词条管理</h2>
+      <button class="fin-terms-sidebar-close">&times;</button>
+    </div>
+    <div class="fin-terms-sidebar-content">
+      <div class="fin-terms-tabs">
+        <button class="fin-terms-tab active" data-tab="custom">添加词条</button>
+        <button class="fin-terms-tab" data-tab="mastered">已掌握词条</button>
+      </div>
+      
+      <div class="fin-terms-tab-content active" data-tab="custom">
+        <div class="no-custom-terms">暂无自定义词条</div>
+      </div>
+      
+      <div class="fin-terms-tab-content" data-tab="mastered">
+        <div class="no-mastered-terms">暂无已掌握的词条</div>
+      </div>
+    </div>
+  `;
+    // 关闭按钮事件
+    const closeBtn = sidebar.querySelector('.fin-terms-sidebar-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            hideSidebar();
+        });
+    }
+    // Tab 切换事件
+    const tabs = sidebar.querySelectorAll('.fin-terms-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.getAttribute('data-tab');
+            if (tabName) {
+                // 更新 tab 状态
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                // 更新内容显示
+                if (sidebar) {
+                    const contents = sidebar.querySelectorAll('.fin-terms-tab-content');
+                    contents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.getAttribute('data-tab') === tabName) {
+                            content.classList.add('active');
+                        }
+                    });
+                }
+                // 更新对应内容
+                if (tabName === 'custom') {
+                    updateCustomTermsContent();
+                }
+                else if (tabName === 'mastered') {
+                    updateMasteredTermsContent();
+                }
+            }
+        });
+    });
+    // 点击外部关闭
+    document.addEventListener('click', (e) => {
+        const target = e.target;
+        if (sidebar && !sidebar.contains(target)) {
+            // 安全地检查 target 是否为 Element 类型并支持 closest 方法
+            if (target && typeof target === 'object' && 'closest' in target && typeof target.closest === 'function') {
+                const element = target;
+                if (!element.closest('[data-fin-term]')) {
+                    hideSidebar();
+                }
+            }
+            else {
+                // 如果 target 不支持 closest 方法，直接隐藏侧边栏
+                hideSidebar();
+            }
+        }
+    });
+    document.body.appendChild(sidebar);
+    return sidebar;
+}
+function showSidebar() {
+    const sidebarEl = createSidebar();
+    sidebarEl.classList.add('open');
+    updateCustomTermsContent();
+    updateMasteredTermsContent();
+}
+function hideSidebar() {
+    if (sidebar) {
+        sidebar.classList.remove('open');
+    }
+}
+function updateCustomTermsContent() {
+    if (!sidebar)
+        return;
+    const content = sidebar.querySelector('.fin-terms-tab-content[data-tab="custom"]');
+    if (!content) {
+        console.error('Custom tab content not found');
+        return;
+    }
+    console.log('Updating custom terms content, count:', Object.keys(customTerms).length);
+    if (Object.keys(customTerms).length === 0) {
+        content.innerHTML = '<div class="no-custom-terms">暂无自定义词条</div>';
+        return;
+    }
+    const termsList = Object.entries(customTerms).map(([term, data]) => {
+        return `
+      <div class="custom-term-item">
+        <div class="custom-term-title">${term}</div>
+        <div class="custom-term-explain">${data.explain}</div>
+        <div class="custom-term-date">创建时间: ${new Date(data.createdAt).toLocaleDateString('zh-CN')}</div>
+      </div>
+    `;
+    }).join('');
+    content.innerHTML = termsList;
+    console.log('Custom terms content updated');
+}
+function updateMasteredTermsContent() {
+    if (!sidebar)
+        return;
+    const content = sidebar.querySelector('.fin-terms-tab-content[data-tab="mastered"]');
+    if (!content) {
+        console.error('Mastered tab content not found');
+        return;
+    }
+    console.log('Updating mastered terms content, count:', masteredTerms.size);
+    if (masteredTerms.size === 0) {
+        content.innerHTML = '<div class="no-mastered-terms">暂无已掌握的词条</div>';
+        return;
+    }
+    const allTerms = getAllTerms();
+    const termsList = Array.from(masteredTerms).map(term => {
+        const data = allTerms[term];
+        if (!data)
+            return '';
+        return `
+      <div class="mastered-term-item">
+        <div class="mastered-term-title">${term}</div>
+        <div class="mastered-term-explain">${data.explain}</div>
+        <div class="mastered-term-date">掌握时间: ${new Date().toLocaleDateString('zh-CN')}</div>
+      </div>
+    `;
+    }).filter(Boolean).join('');
+    content.innerHTML = termsList;
+    console.log('Mastered terms content updated');
+}
+// —— 页面文本与识别 ——
+function getPageText() {
+    function getTextFromNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent || '';
+        }
+        if (node.nodeType === Node.ELEMENT_NODE &&
+            node.tagName !== 'SCRIPT' &&
+            node.tagName !== 'STYLE') {
+            let text = '';
+            node.childNodes.forEach((child) => {
+                text += getTextFromNode(child);
+            });
+            return text;
+        }
+        return '';
+    }
+    return getTextFromNode(document.body).replace(/\s+/g, ' ').trim();
+}
+function detectFinancialTerms(text) {
+    const allTerms = getAllTerms();
+    return Object.keys(allTerms).filter((term) => text.includes(term));
+}
+// —— 高亮 ——
+const BLOCKED_TAGS = new Set([
+    'SCRIPT',
+    'STYLE',
+    'NOSCRIPT',
+    'TEXTAREA',
+    'INPUT',
+    'CODE',
+    'PRE',
+    'SVG',
+    'CANVAS',
+    'IMG',
+    'VIDEO',
+    'AUDIO',
+]);
+function highlightTerms(root, terms) {
+    if (terms.length === 0)
+        return 0;
+    ensureStyles();
+    // 过滤掉已掌握的词条
+    const termsToHighlight = terms.filter(term => !masteredTerms.has(term));
+    if (termsToHighlight.length === 0)
+        return 0;
+    const pattern = new RegExp('(' + termsToHighlight.map((t) => escapeRegExp(t)).join('|') + ')', 'g');
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+            const parent = node.parentElement;
+            if (!parent)
+                return NodeFilter.FILTER_REJECT;
+            if (BLOCKED_TAGS.has(parent.tagName))
+                return NodeFilter.FILTER_REJECT;
+            if (parent.classList.contains('yiyuan-highlight'))
+                return NodeFilter.FILTER_REJECT;
+            // 安全地检查 parent 是否支持 closest 方法
+            if (parent && typeof parent.closest === 'function') {
+                if (parent.closest('.yiyuan-tooltip,[data-yiyuan-skip="1"]'))
+                    return NodeFilter.FILTER_REJECT;
+            }
+            const txt = node.nodeValue || '';
+            return txt.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        },
+    });
+    const textNodes = [];
+    let n;
+    // eslint-disable-next-line no-cond-assign
+    while ((n = walker.nextNode()))
+        textNodes.push(n);
+    let replaceCount = 0;
+    for (const textNode of textNodes) {
+        const raw = textNode.nodeValue || '';
+        if (!pattern.test(raw))
+            continue;
+        pattern.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let lastIndex = 0;
+        let match;
+        // eslint-disable-next-line no-cond-assign
+        while ((match = pattern.exec(raw))) {
+            const term = match[0];
+            if (match.index > lastIndex) {
+                frag.appendChild(document.createTextNode(raw.slice(lastIndex, match.index)));
+            }
+            const span = document.createElement('span');
+            span.className = 'yiyuan-highlight';
+            span.textContent = term;
+            span.setAttribute('data-yiyuan-term', term);
+            span.addEventListener('mouseenter', () => {
+                const rect = span.getBoundingClientRect();
+                showTooltip(term, rect);
+            });
+            span.addEventListener('mouseleave', () => {
+                hideTooltip();
+            });
+            frag.appendChild(span);
+            lastIndex = match.index + term.length;
+            replaceCount++;
+        }
+        if (lastIndex < raw.length) {
+            frag.appendChild(document.createTextNode(raw.slice(lastIndex)));
+        }
+        textNode.parentNode?.replaceChild(frag, textNode);
+    }
+    return replaceCount;
+}
+function scanAndHighlight() {
+    const text = getPageText();
+    const terms = detectFinancialTerms(text).sort((a, b) => b.length - a.length);
+    return highlightTerms(document.body, terms);
+}
+// —— 消息与自动扫描 ——
+chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.type === 'PROCESS_PAGE') {
+        const count = scanAndHighlight();
+        console.info('[FinTerms] manual scan, highlights:', count);
+        if (count === 0) {
+            alert('未检测到金融术语。');
+        }
+    }
+    else if (msg.type === 'SHOW_SIDEBAR') {
+        showSidebar();
+    }
+    else if (msg.type === 'EXPLAIN_SELECTION') {
+        // 来自浏览器右键菜单（selection）的触发
+        const text = String(msg.text || '').trim();
+        if (!text)
+            return;
+        // 尝试从当前选区获取坐标；若无选区，则使用视口中心
+        let x = Math.round(window.innerWidth / 2);
+        let y = Math.round(window.innerHeight / 2);
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            if (rect && rect.width + rect.height > 0) {
+                x = Math.round(rect.left + Math.min(300, rect.width));
+                y = Math.round(rect.top + Math.min(60, rect.height)) + 20;
+            }
+        }
+        if (isValidText(text)) {
+            showCustomTermTooltip(text, { x, y });
+        }
+        else {
+            showErrorMessage('所选文本不符合解读条件（需主要为中文或英文，≤15字符）');
+        }
+    }
+});
+let featureEnabled = true;
+let scanDebounceId = null;
+function triggerScanDebounced(delayMs = 400) {
+    if (!featureEnabled)
+        return;
+    if (scanDebounceId !== null)
+        window.clearTimeout(scanDebounceId);
+    scanDebounceId = window.setTimeout(() => {
+        const count = scanAndHighlight();
+        console.info('[FinTerms] auto scan, highlights:', count);
+    }, delayMs);
+}
+async function initAutoScan() {
+    try {
+        const { enabled } = await chrome.storage.sync.get(['enabled']);
+        featureEnabled = enabled !== false; // 默认开启
+    }
+    catch {
+        featureEnabled = true;
+    }
+    // 加载词条数据
+    await loadTermsData();
+    const runInitial = () => triggerScanDebounced(0);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runInitial, { once: true });
+    }
+    else {
+        runInitial();
+    }
+    const mo = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            if (m.addedNodes && m.addedNodes.length > 0) {
+                let shouldScan = false;
+                for (const nd of Array.from(m.addedNodes)) {
+                    if (nd.nodeType === Node.ELEMENT_NODE) {
+                        const el = nd;
+                        // 如果变更仅发生在 tooltip 内部，则跳过
+                        if (el && typeof el.closest === 'function' && (el.closest('.yiyuan-tooltip') || el.closest('[data-yiyuan-skip="1"]'))) {
+                            continue;
+                        }
+                    }
+                    shouldScan = true;
+                }
+                if (shouldScan) {
+                    triggerScanDebounced();
+                    break;
+                }
+            }
+        }
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+    window.addEventListener('resize', () => hideTooltip());
+    window.addEventListener('scroll', () => hideTooltip(), { capture: true, passive: true });
+    // 监听弹窗的鼠标事件，防止hover时消失
+    document.addEventListener('mouseover', (e) => {
+        const el = getEventElement(e);
+        if (el && typeof el.closest === 'function' && el.closest('[data-yiyuan-skip="1"]')) {
+            cancelHideTooltip(); // 鼠标进入弹窗时取消隐藏
+        }
+    }, { capture: true });
+    document.addEventListener('mouseleave', (e) => {
+        const el = getEventElement(e);
+        if (el && typeof el.closest === 'function' && el.closest('[data-yiyuan-skip="1"]')) {
+            hideTooltip(); // 鼠标离开弹窗时启动隐藏定时器
+        }
+    }, { capture: true });
+    // 监听右键菜单事件（捕获阶段），提升被站点弹窗/遮罩拦截时的兼容性
+    document.addEventListener('contextmenu', (e) => {
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim()) {
+            const selectedText = selection.toString().trim();
+            // 检查是否为有效的中文文本且不超过15个字符
+            if (isValidText(selectedText)) {
+                // 避免与站点的右键菜单冲突，但不强制阻止默认，保持可回退到浏览器右键菜单
+                try {
+                    e.preventDefault();
+                }
+                catch { }
+                showContextMenu(e.clientX, e.clientY, selectedText);
+            }
+        }
+    }, { capture: true });
+    // 点击其他地方隐藏右键菜单
+    document.addEventListener('click', () => {
+        hideContextMenu();
+    }, { capture: true });
+    // 按ESC键隐藏右键菜单
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideContextMenu();
+            hideTooltip();
+        }
+    }, { capture: true });
+}
+initAutoScan();
+// 文件结束

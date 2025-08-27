@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI响应调试页面</title>
+    <link rel="stylesheet" href="content.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .debug-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .debug-container h2 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .debug-log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .debug-log .log-entry {
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .debug-log .log-time {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .debug-log .log-level {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .debug-log .log-level.info { color: #00ffff; }
+        .debug-log .log-level.success { color: #00ff00; }
+        .debug-log .log-level.warning { color: #ffff00; }
+        .debug-log .log-level.error { color: #ff0000; }
+        
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .result-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-item .label {
+            font-weight: bold;
+            min-width: 120px;
+            margin-right: 20px;
+            color: #333;
+        }
+        
+        .result-item .content {
+            flex: 1;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .test-status {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-text h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        
+        .status-text p {
+            margin: 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 AI响应调试页面</h1>
+        <p>专门用于诊断AI响应问题的调试工具</p>
+    </div>
+    
+    <div class="debug-container">
+        <h2>🧪 AI响应调试测试</h2>
+        
+        <div class="form-group">
+            <label for="testInputText">测试文案：</label>
+            <textarea 
+                id="testInputText" 
+                placeholder="请输入需要优化的文案内容..."
+                rows="4"
+            >这是一个测试文案，需要优化。投资有风险，请谨慎决策。</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="testSiteType">测试场景：</label>
+            <select id="testSiteType">
+                <option value="longport">LongPort 金融平台</option>
+                <option value="notion">Notion 文档协作</option>
+                <option value="general">通用文本</option>
+            </select>
+        </div>
+        
+        <button type="button" id="startDebugTest" class="btn">
+            🚀 优化文本
+        </button>
+        
+        <button type="button" id="clearDebugLog" class="btn btn-secondary">
+            🗑️ 清空调试日志
+        </button>
+        
+        <button type="button" id="exportDebugLog" class="btn btn-secondary">
+            💾 导出调试日志
+        </button>
+    </div>
+    
+    <!-- 测试状态 -->
+    <div id="testStatus" class="test-status">
+        <div class="loading-spinner"></div>
+        <div class="status-text">
+            <h4>AI 正在优化您的文案...</h4>
+            <p id="statusMessage">请稍候，这可能需要几秒钟时间</p>
+        </div>
+    </div>
+    
+    <!-- 调试结果 -->
+    <div id="resultSection" class="result-section">
+        <h3>📊 调试结果分析</h3>
+        
+        <div class="result-item">
+            <div class="label">原始文案：</div>
+            <div class="content" id="originalText"></div>
+        </div>
+        
+        <div class="result-item">
+            <div class="label">AI响应：</div>
+            <div class="content" id="aiResponse"></div>
+        </div>
+        
+        <div class="result-item">
+            <div class="label">响应分析：</div>
+            <div class="content" id="responseAnalysis"></div>
+        </div>
+        
+        <div class="result-item">
+            <div class="label">字段解析：</div>
+            <div class="content" id="fieldParsing"></div>
+        </div>
+        
+        <div class="result-item">
+            <div class="label">最终结果：</div>
+            <div class="content" id="finalResult"></div>
+        </div>
+    </div>
+    
+    <!-- 调试日志 -->
+    <div class="debug-container">
+        <h2>📝 调试日志</h2>
+        <div id="debugLog" class="debug-log">
+            <div class="log-entry">
+                <span class="log-time">[系统]</span>
+                <span class="log-level info">INFO</span>
+                <span>AI响应调试页面已加载，准备开始调试...</span>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { optimizeText } from './api-contract.js';
+        
+        // 调试日志管理
+        class DebugLogger {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.logs = [];
+            }
+            
+            log(level, message, data = null) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = {
+                    timestamp,
+                    level,
+                    message,
+                    data
+                };
+                
+                this.logs.push(logEntry);
+                this.displayLog(logEntry);
+                
+                // 同时输出到控制台
+                console.log(`[${timestamp}] ${level}: ${message}`, data);
+            }
+            
+            displayLog(logEntry) {
+                const logElement = document.createElement('div');
+                logElement.className = 'log-entry';
+                
+                let dataDisplay = '';
+                if (logEntry.data) {
+                    if (typeof logEntry.data === 'object') {
+                        dataDisplay = '\n' + JSON.stringify(logEntry.data, null, 2);
+                    } else {
+                        dataDisplay = '\n' + String(logEntry.data);
+                    }
+                }
+                
+                logElement.innerHTML = `
+                    <span class="log-time">[${logEntry.timestamp}]</span>
+                    <span class="log-level ${logEntry.level.toLowerCase()}">${logEntry.level}</span>
+                    <span>${logEntry.message}${dataDisplay}</span>
+                `;
+                
+                this.container.appendChild(logElement);
+                this.container.scrollTop = this.container.scrollHeight;
+            }
+            
+            clear() {
+                this.container.innerHTML = '';
+                this.logs = [];
+                this.log('INFO', '调试日志已清空');
+            }
+            
+            export() {
+                const logText = this.logs.map(log => 
+                    `[${log.timestamp}] ${log.level}: ${log.message}${log.data ? '\n' + JSON.stringify(log.data, null, 2) : ''}`
+                ).join('\n\n');
+                
+                const blob = new Blob([logText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ai-response-debug-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.log`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+        
+        // 初始化调试日志
+        const debugLogger = new DebugLogger('debugLog');
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLogger.log('INFO', '页面加载完成，初始化调试工具...');
+            bindEvents();
+        });
+        
+        // 绑定事件
+        function bindEvents() {
+            const startDebugTestBtn = document.getElementById('startDebugTest');
+            const clearDebugLogBtn = document.getElementById('clearDebugLog');
+            const exportDebugLogBtn = document.getElementById('exportDebugLog');
+            
+            if (startDebugTestBtn) {
+                startDebugTestBtn.addEventListener('click', startDebugTest);
+                debugLogger.log('INFO', '绑定开始调试测试按钮');
+            }
+            
+            if (clearDebugLogBtn) {
+                clearDebugLogBtn.addEventListener('click', () => debugLogger.clear());
+                debugLogger.log('INFO', '绑定清空调试日志按钮');
+            }
+            
+            if (exportDebugLogBtn) {
+                exportDebugLogBtn.addEventListener('click', () => debugLogger.export());
+                debugLogger.log('INFO', '绑定导出调试日志按钮');
+            }
+            
+            debugLogger.log('SUCCESS', '事件绑定完成');
+        }
+        
+        // 开始调试测试
+        async function startDebugTest() {
+            debugLogger.log('INFO', '🚀 开始AI响应调试测试...');
+            
+            const inputText = document.getElementById('testInputText')?.value?.trim();
+            const siteType = document.getElementById('testSiteType')?.value || 'general';
+            
+            if (!inputText) {
+                debugLogger.log('ERROR', '请输入需要优化的文案内容');
+                alert('请输入需要优化的文案内容');
+                return;
+            }
+            
+            debugLogger.log('INFO', '测试参数:', { inputText, siteType, textLength: inputText.length });
+            
+            // 显示测试状态
+            showTestStatus();
+            
+            // 记录开始时间
+            const startTime = Date.now();
+            
+            try {
+                debugLogger.log('INFO', '📤 调用API优化文本...');
+                
+                // 调用API进行优化
+                const response = await optimizeText(inputText);
+                
+                // 计算处理时间
+                const processingTime = Date.now() - startTime;
+                
+                debugLogger.log('SUCCESS', '📥 收到API响应', response);
+                debugLogger.log('INFO', '响应详情:', {
+                    hasResponse: !!response,
+                    responseType: typeof response,
+                    responseKeys: response ? Object.keys(response) : [],
+                    processingTime
+                });
+                
+                // 分析响应
+                analyzeResponse(response, inputText, processingTime);
+                
+            } catch (error) {
+                debugLogger.log('ERROR', '❌ API调用失败', error);
+                const processingTime = Date.now() - startTime;
+                showTestError(inputText, `优化失败: ${error.message}`, processingTime);
+            }
+        }
+        
+        // 分析AI响应
+        function analyzeResponse(response, inputText, processingTime) {
+            debugLogger.log('INFO', '🔍 开始分析AI响应...');
+            
+            // 隐藏测试状态
+            const testStatus = document.getElementById('testStatus');
+            if (testStatus) testStatus.style.display = 'none';
+            
+            // 显示结果区域
+            const resultSection = document.getElementById('resultSection');
+            if (resultSection) resultSection.style.display = 'block';
+            
+            // 填充原始文案
+            const originalTextEl = document.getElementById('originalText');
+            if (originalTextEl) originalTextEl.textContent = inputText;
+            
+            // 填充AI响应
+            const aiResponseEl = document.getElementById('aiResponse');
+            if (aiResponseEl) {
+                aiResponseEl.textContent = JSON.stringify(response, null, 2);
+            }
+            
+            // 响应分析
+            let responseAnalysis = '';
+            if (response && typeof response === 'object') {
+                responseAnalysis += `响应类型: ${typeof response}\n`;
+                responseAnalysis += `响应键: ${Object.keys(response).join(', ')}\n`;
+                responseAnalysis += `响应状态: ${response.success ? '成功' : '失败'}\n`;
+                
+                if (response.success) {
+                    responseAnalysis += `\n成功响应分析:\n`;
+                    responseAnalysis += `- optimizedText: ${typeof response.optimizedText} - ${response.optimizedText || 'undefined'}\n`;
+                    responseAnalysis += `- result: ${typeof response.result} - ${response.result || 'undefined'}\n`;
+                    responseAnalysis += `- text: ${typeof response.text} - ${response.text || 'undefined'}\n`;
+                    responseAnalysis += `- optimized_text: ${typeof response.optimized_text} - ${response.optimized_text || 'undefined'}\n`;
+                    responseAnalysis += `- data: ${typeof response.data} - ${response.data || 'undefined'}\n`;
+                } else {
+                    responseAnalysis += `\n错误响应分析:\n`;
+                    responseAnalysis += `- error: ${response.error || 'undefined'}\n`;
+                    responseAnalysis += `- message: ${response.message || 'undefined'}\n`;
+                }
+            } else {
+                responseAnalysis = `响应无效: ${response}`;
+            }
+            
+            const responseAnalysisEl = document.getElementById('responseAnalysis');
+            if (responseAnalysisEl) {
+                responseAnalysisEl.textContent = responseAnalysis;
+            }
+            
+            // 字段解析
+            let fieldParsing = '';
+            if (response && response.success) {
+                fieldParsing += '字段解析过程:\n\n';
+                
+                let optimizedText = '';
+                let foundField = '';
+                
+                // 按优先级尝试不同的字段
+                if (response.optimizedText && typeof response.optimizedText === 'string' && response.optimizedText.trim().length > 0) {
+                    optimizedText = response.optimizedText;
+                    foundField = 'optimizedText';
+                    fieldParsing += '✅ 从 optimizedText 字段获取到结果\n';
+                } else if (response.result && typeof response.result === 'string' && response.result.trim().length > 0) {
+                    optimizedText = response.result;
+                    foundField = 'result';
+                    fieldParsing += '✅ 从 result 字段获取到结果\n';
+                } else if (response.text && typeof response.text === 'string' && response.text.trim().length > 0) {
+                    optimizedText = response.text;
+                    foundField = 'text';
+                    fieldParsing += '✅ 从 text 字段获取到结果\n';
+                } else if (response.optimized_text && typeof response.optimized_text === 'string' && response.optimized_text.trim().length > 0) {
+                    optimizedText = response.optimized_text;
+                    foundField = 'optimized_text';
+                    fieldParsing += '✅ 从 optimized_text 字段获取到结果\n';
+                } else if (response.data && typeof response.data === 'string' && response.data.trim().length > 0) {
+                    optimizedText = response.data;
+                    foundField = 'data';
+                    fieldParsing += '✅ 从 data 字段获取到结果\n';
+                } else {
+                    fieldParsing += '❌ 所有字段都未找到有效的优化文本\n';
+                }
+                
+                fieldParsing += `\n找到字段: ${foundField || '无'}\n`;
+                fieldParsing += `优化文本长度: ${optimizedText ? optimizedText.length : 0}\n`;
+                fieldParsing += `优化文本预览: ${optimizedText ? optimizedText.substring(0, 100) + '...' : '无内容'}`;
+                
+                // 最终结果
+                let finalResult = '';
+                if (optimizedText && optimizedText.trim().length > 0) {
+                    finalResult = `✅ 成功获取到优化文本\n\n${optimizedText}`;
+                    debugLogger.log('SUCCESS', '🎉 调试测试成功！获取到优化文本');
+                } else {
+                    finalResult = `❌ 未能获取到有效的优化文本\n\n可能的原因:\n1. AI返回的响应格式不正确\n2. 所有字段都为空或无效\n3. 字段类型不匹配`;
+                    debugLogger.log('ERROR', '❌ 调试测试失败：未能获取到有效的优化文本');
+                }
+                
+                const finalResultEl = document.getElementById('finalResult');
+                if (finalResultEl) {
+                    finalResultEl.textContent = finalResult;
+                }
+                
+            } else {
+                fieldParsing = '响应失败，无法进行字段解析';
+                const finalResultEl = document.getElementById('finalResult');
+                if (finalResultEl) {
+                    finalResultEl.textContent = `❌ 响应失败: ${response?.error || response?.message || '未知错误'}`;
+                }
+            }
+            
+            const fieldParsingEl = document.getElementById('fieldParsing');
+            if (fieldParsingEl) {
+                fieldParsingEl.textContent = fieldParsing;
+            }
+            
+            debugLogger.log('INFO', '🔍 响应分析完成');
+        }
+        
+        // 显示测试状态
+        function showTestStatus() {
+            const testStatus = document.getElementById('testStatus');
+            const resultSection = document.getElementById('resultSection');
+            
+            if (testStatus) testStatus.style.display = 'block';
+            if (resultSection) resultSection.style.display = 'none';
+            
+            // 更新状态消息
+            updateStatusMessage('正在调用AI进行文案优化...');
+        }
+        
+        // 更新状态消息
+        function updateStatusMessage(message) {
+            const statusMessage = document.getElementById('statusMessage');
+            if (statusMessage) {
+                statusMessage.textContent = message;
+            }
+        }
+        
+        // 显示测试错误
+        function showTestError(originalText, errorMessage, processingTime) {
+            debugLogger.log('ERROR', '显示测试错误', { originalText, errorMessage, processingTime });
+            
+            // 隐藏测试状态
+            const testStatus = document.getElementById('testStatus');
+            if (testStatus) testStatus.style.display = 'none';
+            
+            // 显示结果区域
+            const resultSection = document.getElementById('resultSection');
+            if (resultSection) resultSection.style.display = 'block';
+            
+            // 填充原始文案
+            const originalTextEl = document.getElementById('originalText');
+            if (originalTextEl) originalTextEl.textContent = originalText || '无原始文案';
+            
+            // 显示错误信息
+            const aiResponseEl = document.getElementById('aiResponse');
+            if (aiResponseEl) aiResponseEl.textContent = '测试失败，无响应';
+            
+            const responseAnalysisEl = document.getElementById('responseAnalysis');
+            if (responseAnalysisEl) responseAnalysisEl.textContent = '测试失败';
+            
+            const fieldParsingEl = document.getElementById('fieldParsing');
+            if (fieldParsingEl) fieldParsingEl.textContent = '无法解析';
+            
+            const finalResultEl = document.getElementById('finalResult');
+            if (finalResultEl) finalResultEl.textContent = `❌ ${errorMessage}`;
+        }
+        
+        debugLogger.log('SUCCESS', 'AI响应调试页面初始化完成');
+    </script>
+</body>
+</html>
