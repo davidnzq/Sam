@@ -1,6 +1,6 @@
 # LongPort AI 助手
 
-LongPort AI 助手是一款 Chrome 扩展，为 Notion 和 LongPort 平台提供 AI 辅助协作功能，包括文本语法校验和优化。
+LongPort AI 助手是一款 Chrome 扩展，为 Notion 和 LongPort 平台提供 AI 辅助写作功能，包括文本语法校验和优化。
 
 ## 功能特点
 
