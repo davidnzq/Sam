@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LongPort AI Pro - 文案优化效果测试</title>
+  <link rel="stylesheet" href="test.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <h1>LongPort AI Pro</h1>
+        </div>
+        <p class="header-subtitle">文案优化效果测试</p>
+      </div>
+    </header>
+    
+    <main>
+      <section class="test-section settings-section">
+        <div class="section-header">
+          <h2>文案优化测试</h2>
+          <p class="section-description">在此页面测试文案优化功能，验证API效果和性能</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="testMode" style="font-size: 12px; font-weight: normal;">优化模式</label>
+          <div class="radio-group">
+            <div class="radio-wrapper">
+              <input type="radio" id="basicMode" name="testMode" value="basic" checked>
+              <label for="basicMode" class="radio-label" style="font-weight: normal;">基础模式</label>
+            </div>
+            <div class="radio-wrapper">
+              <input type="radio" id="strictMode" name="testMode" value="strict">
+              <label for="strictMode" class="radio-label" style="font-weight: normal;">严格模式</label>
+            </div>
+          </div>
+          <p class="description">严格模式会根据文案指引规范进行优化，确保内容符合专业标准</p>
+        </div>
+        
+        <div class="form-group">
+          <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <input type="checkbox" id="useCacheMode" checked style="margin-right: 6px;">
+            <label for="useCacheMode" style="font-size: 12px; font-weight: normal; margin-bottom: 0;">使用缓存</label>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <input type="checkbox" id="showPerformanceStats" checked style="margin-right: 6px;">
+            <label for="showPerformanceStats" style="font-size: 12px; font-weight: normal; margin-bottom: 0;">显示性能指标</label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="originalText">原始文本</label>
+          <textarea id="originalText" placeholder="请输入需要优化的文本..." rows="6"></textarea>
+          <div class="text-counter" id="originalTextCounter">0 个字符</div>
+        </div>
+        
+        <div class="actions">
+          <button id="runTestBtn" class="btn primary">
+            <span>执行优化</span>
+          </button>
+          <button id="clearTestBtn" class="btn secondary">
+            <span>清空内容</span>
+          </button>
+          <button id="backToSettingsBtn" class="btn link">
+            <span>返回设置</span>
+          </button>
+        </div>
+        
+        <div class="test-result-container" id="testResultContainer">
+          <div class="test-loading" id="testLoading">
+            <div class="spinner"></div>
+            <p>正在优化文本...</p>
+          </div>
+          
+          <div class="test-result" id="testResult">
+            <div class="result-header">
+              <h3>优化结果</h3>
+              <div class="result-stats" id="resultStats">
+                <div class="stat-item">
+                  <span class="stat-label">处理时间:</span>
+                  <span class="stat-value" id="processingTime">0ms</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">字数变化:</span>
+                  <span class="stat-value" id="charCountChange">0 → 0</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="result-content">
+              <div class="optimized-text" id="optimizedText"></div>
+            </div>
+            
+            <div class="result-actions">
+              <button id="copyResultBtn" class="btn secondary">
+                <span>复制结果</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <footer>
+      <p>LongPort AI Pro v1.0.0</p>
+      <a href="#" id="privacyLink" class="footer-link">隐私政策</a>
+    </footer>
+  </div>
+  
+  <!-- 脚本将由 webpack 自动注入 -->
+</body>
+</html>

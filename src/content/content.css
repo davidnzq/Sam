@@ -1,0 +1,554 @@
+/**
+ * longPort AI - 内容脚本样式
+ * 所有样式都添加了longport-ai-前缀，确保不影响页面原有样式
+ */
+
+/* 深色模式变量 */
+:root {
+  /* 品牌色 D0FF00 及其变体 */
+  --longport-ai-brand-color: #D0FF00;
+  --longport-ai-brand-hover: #DBFF33;
+  --longport-ai-brand-active: #B8E600;
+  --longport-ai-brand-light: #F2FFCC;
+  --longport-ai-link-color: #B0D605; /* 文本链接颜色 */
+  
+  --longport-ai-bg-color: #fff;
+  --longport-ai-text-color: #1e1e1e;
+  --longport-ai-border-color: #f0f0f0;
+  --longport-ai-primary-color: #D0FF00; /* 更新为品牌色 */
+  --longport-ai-primary-hover: #DBFF33; /* 更浅的绿色 */
+  --longport-ai-primary-active: #B8E600; /* 更深的绿色 */
+  --longport-ai-secondary-bg: #f5f5f5;
+  --longport-ai-secondary-text: #666;
+  --longport-ai-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.08);
+  --longport-ai-input-bg: #fff;
+  --longport-ai-input-border: #e8e8e8;
+  --longport-ai-original-bg: #fafafa;
+  --longport-ai-original-border: #e0e0e0;
+  --longport-ai-optimized-bg: #F8FFED; /* 浅绿色背景 */
+  --longport-ai-optimized-border: #D0FF00; /* 品牌色边框 */
+  --longport-ai-error-bg: #fff2f0;
+  --longport-ai-error-border: #ffccc7;
+  --longport-ai-error-text: #ff4d4f;
+  --longport-ai-success-color: #52c41a;
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 深色模式下的品牌色变体 */
+    --longport-ai-brand-color: #B8E600; /* 深色模式下的绿色，降低亮度 */
+    --longport-ai-brand-hover: #C4F20D;
+    --longport-ai-brand-active: #A3CC00;
+    --longport-ai-brand-light: #2A3300;
+    --longport-ai-link-color: #B0D605; /* 文本链接颜色保持一致 */
+    
+    --longport-ai-bg-color: #1f1f1f;
+    --longport-ai-text-color: #e0e0e0;
+    --longport-ai-border-color: #303030;
+    --longport-ai-primary-color: #B8E600; /* 深色模式下的品牌色 */
+    --longport-ai-primary-hover: #C4F20D;
+    --longport-ai-primary-active: #A3CC00;
+    --longport-ai-secondary-bg: #141414;
+    --longport-ai-secondary-text: #a0a0a0;
+    --longport-ai-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.2);
+    --longport-ai-input-bg: #141414;
+    --longport-ai-input-border: #303030;
+    --longport-ai-original-bg: #141414;
+    --longport-ai-original-border: #303030;
+    --longport-ai-optimized-bg: #263300; /* 深色模式下的暗绿色背景 */
+    --longport-ai-optimized-border: #B8E600; /* 深色模式下的品牌色边框 */
+    --longport-ai-error-bg: #2a1215;
+    --longport-ai-error-border: #5c2223;
+    --longport-ai-error-text: #ff7875;
+    --longport-ai-success-color: #49aa19;
+  }
+}
+
+/* 弹窗容器 */
+.longport-ai-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 550px;
+  max-width: 90%;
+  background-color: var(--longport-ai-bg-color);
+  border-radius: 12px;
+  box-shadow: var(--longport-ai-shadow);
+  z-index: 2147483647; /* 最大z-index值 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  overflow: hidden;
+  display: flex !important; /* 强制显示 */
+  flex-direction: column;
+  opacity: 1 !important; /* 确保可见 */
+  visibility: visible !important; /* 确保可见 */
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  color: var(--longport-ai-text-color);
+}
+
+/* 弹窗头部 */
+.longport-ai-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: #f5f5f5; /* 固定为灰色背景 */
+  border-bottom: 1px solid var(--longport-ai-border-color);
+  cursor: move;
+  user-select: none;
+  position: relative; /* 添加相对定位以便于定位关闭按钮 */
+}
+
+.longport-ai-popup-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--longport-ai-text-color);
+  display: flex;
+  align-items: center;
+}
+
+/* 移除左侧图标 */
+.longport-ai-popup-title::before {
+  display: none;
+}
+
+.longport-ai-popup-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #666; /* 更深的颜色以增加可见度 */
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  position: absolute; /* 绝对定位 */
+  top: 50%; /* 垂直居中 */
+  right: 20px; /* 右边距离 */
+  transform: translateY(-50%); /* 精确垂直居中 */
+  line-height: 1; /* 确保文本垂直居中 */
+}
+
+.longport-ai-popup-close:hover {
+  background-color: rgba(0, 0, 0, 0.1); /* 半透明背景以增强悬停效果 */
+  color: #333;
+  transform: translateY(-50%) rotate(90deg); /* 保持垂直居中的同时旋转 */
+}
+
+/* 确保 X符号在圆形背景中完全居中 */
+.longport-ai-popup-close::before {
+  content: '\00D7'; /* 使用Unicode字符代替实体字符，更好控制 */
+  display: block;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  font-size: 20px; /* 调整大小 */
+  line-height: 26px; /* 微调垂直位置 */
+}
+
+/* 弹窗内容 */
+.longport-ai-popup-content {
+  padding: 20px;
+  max-height: 450px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d0d0d0 #f5f5f5;
+}
+
+.longport-ai-popup-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.longport-ai-popup-content::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.longport-ai-popup-content::-webkit-scrollbar-thumb {
+  background-color: #d0d0d0;
+  border-radius: 3px;
+}
+
+.longport-ai-popup-content::-webkit-scrollbar-thumb:hover {
+  background-color: #aaaaaa;
+}
+
+.longport-ai-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.longport-ai-text-section {
+  width: 100%;
+}
+
+.longport-ai-text-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.longport-ai-text-area {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--longport-ai-input-border);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  background-color: var(--longport-ai-input-bg);
+  color: var(--longport-ai-text-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.longport-ai-text-area:focus {
+  outline: none;
+  border-color: var(--longport-ai-primary-color);
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.longport-ai-text-area.longport-ai-original {
+  background-color: var(--longport-ai-original-bg);
+  border-color: var(--longport-ai-original-border);
+}
+
+.longport-ai-text-area.longport-ai-optimized {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-height: auto;
+  height: auto;
+  line-height: 1.8;
+}
+
+.longport-ai-stats {
+  margin-top: 12px;
+  padding: 10px;
+  background-color: var(--longport-ai-secondary-bg);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--longport-ai-text-color);
+  display: flex;
+  justify-content: space-between;
+}
+
+.longport-ai-stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.longport-ai-stats-value {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.longport-ai-stats-label {
+  font-size: 13px;
+  color: #666;
+  margin-right: 4px;
+  display: inline-block;
+  text-align: left;
+}
+
+.longport-ai-stats-change {
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-block;
+  text-align: right;
+}
+
+.longport-ai-stats-change.longport-ai-positive {
+  color: #666;
+}
+
+.longport-ai-stats-change.longport-ai-negative {
+  color: #666;
+}
+
+/* 弹窗底部 */
+.longport-ai-popup-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  background-color: var(--longport-ai-bg-color);
+  border-top: 1px solid var(--longport-ai-border-color);
+}
+
+.longport-ai-btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  margin-left: 12px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.longport-ai-btn-primary {
+  background-color: var(--longport-ai-primary-color);
+  color: #000; /* 黄色背景配黑色文字 */
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.longport-ai-btn-primary:hover {
+  background-color: var(--longport-ai-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(5, 65, 145, 0.15);
+}
+
+.longport-ai-btn-primary:active {
+  transform: translateY(0);
+  background-color: var(--longport-ai-primary-active);
+  box-shadow: 0 2px 0 rgba(5, 65, 145, 0.1);
+}
+
+.longport-ai-btn-default {
+  background-color: var(--longport-ai-bg-color);
+  border: 1px solid var(--longport-ai-input-border);
+  color: var(--longport-ai-text-color);
+}
+
+.longport-ai-btn-default:hover {
+  background-color: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #999;
+  border: 1px solid #e0e0e0;
+}
+
+.longport-ai-btn-default:active {
+  background-color: #f0f0f0;
+  border-color: #d9d9d9;
+  color: #888;
+}
+
+/* 加载状态 */
+.longport-ai-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.longport-ai-spinner {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 20px;
+}
+
+.longport-ai-spinner::before,
+.longport-ai-spinner::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.longport-ai-spinner::before {
+  border: 3px solid rgba(22, 119, 255, 0.2);
+}
+
+.longport-ai-spinner::after {
+  border: 3px solid transparent;
+  border-top-color: var(--longport-ai-primary-color);
+  animation: longport-ai-spin 0.8s ease-in-out infinite;
+}
+
+@keyframes longport-ai-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.longport-ai-loading-text {
+  font-size: 15px;
+  color: var(--longport-ai-secondary-text);
+  font-weight: 500;
+  animation: longport-ai-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes longport-ai-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* 错误提示 */
+.longport-ai-error {
+  padding: 16px;
+  background-color: var(--longport-ai-error-bg);
+  border: 1px solid var(--longport-ai-error-border);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  color: var(--longport-ai-error-text);
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.15);
+}
+
+.longport-ai-error-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.longport-ai-error-details {
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.longport-ai-error-suggestion {
+  font-size: 13px;
+  background-color: #fffbe6;
+  padding: 8px;
+  border-radius: 4px;
+  border-left: 3px solid #faad14;
+  margin-top: 8px;
+}
+
+/* 统计信息 */
+.longport-ai-stats {
+  margin-top: 10px;
+  padding: 0;
+  background-color: transparent;
+  font-size: 13px;
+  color: var(--longport-ai-text-color);
+}
+
+.longport-ai-stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.longport-ai-stats-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.longport-ai-detailed-stats {
+  padding-top: 10px;
+  border-top: 1px dashed var(--longport-ai-border-color);
+  margin-top: 2px;
+}
+
+.longport-ai-stats-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  background-color: transparent;
+  white-space: nowrap;
+}
+
+.longport-ai-stats-value {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.longport-ai-stats-label {
+  font-size: 13px;
+  color: #666;
+  margin-right: 4px;
+  display: inline-block;
+  text-align: left;
+}
+
+.longport-ai-stats-change {
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-block;
+  text-align: right;
+}
+
+.longport-ai-stats-change.longport-ai-positive {
+  color: #666;
+}
+
+.longport-ai-stats-change.longport-ai-negative {
+  color: #666;
+}
+
+/* Toast 消息 */
+.longport-ai-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 18px;
+  background-color: var(--longport-ai-bg-color);
+  border-radius: 8px;
+  box-shadow: var(--longport-ai-shadow);
+  display: flex;
+  align-items: center;
+  z-index: 10000;
+  max-width: 380px;
+  animation: longport-ai-fadein 0.3s;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  color: var(--longport-ai-text-color);
+}
+
+/* 按钮波纹效果 */
+.longport-ai-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.longport-ai-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: longport-ai-ripple 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes longport-ai-ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.longport-ai-toast.longport-ai-toast-success {
+  border-left: 4px solid var(--longport-ai-success-color);
+}
+
+.longport-ai-toast.longport-ai-toast-error {
+  border-left: 4px solid var(--longport-ai-error-text);
+}
+
+.longport-ai-toast-content {
+  margin-left: 8px;
+  font-size: 14px;
+  color: var(--longport-ai-text-color);
+}
+
+@keyframes longport-ai-fadein {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 增加弹窗拖拽时的视觉反馈 */
+.longport-ai-popup.longport-ai-dragging {
+  opacity: 0.92 !important;
+  transform: translate(-50%, -50%) scale(0.98);
+  transition: transform 0.1s ease, opacity 0.1s ease;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.1);
+}

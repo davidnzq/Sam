@@ -1,61 +1,97 @@
-# LongPort AI 助手
+# longPort AI Pro
 
-LongPort AI 助手是一款 Chrome 扩展，为 Notion 和 LongPort 平台提供 AI 辅助协作功能，包括文本语法校验和优化。
+longPort AI Pro 是一个浏览器扩展程序，专门为 Notion、LongPort 文档平台等提供 AI 辅助写作和文本优化功能。该工具旨在提升用户的文档编写效率和内容质量。
 
 ## 功能特点
 
-- 支持 Notion 和 LongPort 平台的文本优化
-- 右键菜单快速调用 AI 优化
-- 支持公司内部 API 配置
-- 提供专业文案优化建议
+- 文本智能优化
+- 支持普通模式和严格模式
+- 快捷键操作 (Alt+O)
+- 右键菜单集成
+- 可自定义 API 设置
 
-## 构建说明
+## 开发环境设置
 
-### 环境要求
+### 前置条件
 
-- Node.js 14.0 或更高版本
-- Chrome 浏览器 88 或更高版本
+- Node.js (推荐 v16 或更高版本)
+- npm 或 yarn
 
 ### 安装依赖
 
 ```bash
-# 安装依赖包
+# 使用 npm
 npm install
+
+# 或使用 yarn
+yarn
 ```
 
 ### 开发模式
 
 ```bash
-# 启动开发服务器
+# 使用 npm
 npm run dev
+
+# 或使用 yarn
+yarn dev
 ```
 
-### 构建生产版本
+### 构建扩展
 
 ```bash
-# 构建生产版本
+# 使用 npm
 npm run build
+
+# 或使用 yarn
+yarn build
 ```
 
-构建完成后，生成的扩展文件将位于 `dist` 目录中。
+## 在浏览器中加载扩展
 
-### 加载扩展
+### Chrome 浏览器
 
-1. 打开 Chrome 浏览器，进入扩展管理页面 (`chrome://extensions/`)
-2. 开启"开发者模式"
-3. 点击"加载已解压的扩展"，选择 `dist` 目录
-4. 扩展将被加载到浏览器中
+1. 打开 Chrome 浏览器
+2. 在地址栏中输入 `chrome://extensions/`
+3. 在右上角启用"开发者模式"
+4. 点击"加载已解压的扩展程序"按钮
+5. 选择项目的 `dist` 目录
+6. 扩展程序将被加载到浏览器中
 
-## 配置说明
+### Edge 浏览器
 
-首次安装后，请前往扩展选项页面配置 API 设置：
+1. 打开 Edge 浏览器
+2. 在地址栏中输入 `edge://extensions/`
+3. 在左侧启用"开发人员模式"
+4. 点击"加载解压缩的扩展"按钮
+5. 选择项目的 `dist` 目录
+6. 扩展程序将被加载到浏览器中
 
-1. 点击扩展图标，选择"选项"
-2. 配置公司内部 API 地址和密钥
-3. 测试连接以确保 API 可用
+## 权限说明
 
-## 使用方法
+本扩展使用以下权限：
 
-1. 在支持的网站 (Notion 或 LongPort) 中选择文本
-2. 右键点击选中文本，选择"优化文案"
-3. 查看 AI 优化建议并应用更改
+- `storage`: 用于存储用户设置和配置
+- `<all_urls>`: 用于在所有网站上运行内容脚本，以便提供文本优化功能
+
+## 项目结构
+
+```
+longport-AI-Pro/
+├── public/                 # 静态资源
+│   └── icons/              # 扩展图标
+├── src/                    # 源代码
+│   ├── background/         # 后台脚本
+│   ├── content/            # 内容脚本
+│   ├── popup/              # 弹出窗口
+│   └── options/            # 选项页面
+├── manifest.json           # 扩展清单文件
+├── package.json            # 项目依赖
+├── tsconfig.json           # TypeScript 配置
+├── webpack.config.js       # Webpack 配置
+└── README.md               # 项目说明
+```
+
+## 许可证
+
+MIT

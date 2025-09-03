@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LongPort AI Pro - 设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <h1>LongPort AI Pro</h1>
+        </div>
+        <p class="header-subtitle">配置您的 AI 助手</p>
+      </div>
+    </header>
+    
+    <main>
+      <section class="settings-section">
+        <div class="section-header">
+          <h2>API 配置</h2>
+        </div>
+        
+        <div class="form-group">
+          <label for="apiEndpoint">API 地址</label>
+          <div class="input-wrapper">
+            <input type="text" id="apiEndpoint" placeholder="https://lboneapi.longbridge-inc.com" value="https://lboneapi.longbridge-inc.com">
+          </div>
+          <p class="field-hint">LongPort AI API 服务器地址，系统会自动添加 /v1/chat/completions 路径</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="apiKey">API 密钥</label>
+          <div class="input-wrapper">
+            <input type="password" id="apiKey" placeholder="输入 API 密钥">
+            <button type="button" class="toggle-password" id="togglePassword" aria-label="显示密码">
+              <span class="eye-icon"></span>
+            </button>
+          </div>
+          <p class="field-hint">您的 API 密钥将被加密存储在本地</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="modelSelection">模型选择</label>
+          <div class="input-wrapper">
+            <select id="modelSelection" class="model-select">
+              <option value="auto" selected>自动（按优先级调用）</option>
+              <option value="gpt-4.1">GPT-4.1（最高性能）</option>
+              <option value="gpt-4o">GPT-4o（高性能）</option>
+              <option value="claude-3-7-sonnet-20250219">Claude-3.7-Sonnet（长文本处理）</option>
+              <option value="gpt-4o-mini">GPT-4o-Mini（性价比高）</option>
+              <option value="gpt-5-mini">GPT-5-Mini（快速响应）</option>
+              <option value="claude-3-5-sonnet-20240620">Claude-3.5-Sonnet（中文优化）</option>
+              <option value="DeepSeek-V3">DeepSeek-V3（专业文本处理）</option>
+              <option value="gpt-5">GPT-5（最新模型）</option>
+            </select>
+          </div>
+          <p class="field-hint">选择特定模型或使用自动模式按优先级调用：GPT-4.1 → GPT-4o → Claude-3.7-Sonnet → GPT-4o-Mini → GPT-5-Mini</p>
+        </div>
+        
+        <div class="form-group">
+          <button id="testApiBtn" class="btn secondary">
+            <span>测试连接</span>
+          </button>
+          <div id="apiTestResult" class="api-test-result hidden">
+            <div class="test-status">
+              <span id="testStatusIcon" class="status-icon"></span>
+              <span id="testStatusText">未测试</span>
+            </div>
+            <div id="testDetails" class="test-details"></div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="settings-section">
+        <div class="section-header">
+          <h2>功能设置</h2>
+        </div>
+        
+        <div class="form-group switch-group">
+          <div class="switch-wrapper">
+            <label for="strictMode" class="switch-label">严格模式</label>
+            <label class="switch">
+              <input type="checkbox" id="strictMode">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <p class="description">根据文案指引规范进行优化，确保内容符合专业标准</p>
+        </div>
+      </section>
+      
+      <section class="settings-section">
+        <div class="section-header">
+          <h2>快捷键设置</h2>
+        </div>
+        
+        <div class="shortcut-container">
+          <div class="form-group shortcut-group">
+            <label for="optimizeShortcut">润色文本快捷键</label>
+            <div class="shortcut-input-wrapper">
+              <div class="shortcut-recorder" id="optimizeShortcutRecorder" tabindex="0">
+                <div class="shortcut-placeholder" id="optimizeShortcutPlaceholder">点击此处录入快捷键</div>
+                <div class="shortcut-display" id="optimizeShortcutDisplay">
+                  <span class="shortcut-key-combo"></span>
+                  <button type="button" class="shortcut-clear" id="optimizeShortcutClear" title="清除快捷键">
+                    <span class="clear-icon">×</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p class="field-hint">默认快捷键: Alt+O</p>
+            <div class="shortcut-conflict" id="optimizeShortcutConflict"></div>
+          </div>
+          
+          <div class="form-group shortcut-group">
+            <label for="replaceShortcut">替换文本快捷键</label>
+            <div class="shortcut-input-wrapper">
+              <div class="shortcut-recorder" id="replaceShortcutRecorder" tabindex="0">
+                <div class="shortcut-placeholder" id="replaceShortcutPlaceholder">点击此处录入快捷键</div>
+                <div class="shortcut-display" id="replaceShortcutDisplay">
+                  <span class="shortcut-key-combo"></span>
+                  <button type="button" class="shortcut-clear" id="replaceShortcutClear" title="清除快捷键">
+                    <span class="clear-icon">×</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p class="field-hint">默认快捷键: 空格键 <span class="shortcut-status">(仅在弹窗显示时生效)</span></p>
+            <div class="shortcut-note">注意: 由于Chrome扩展限制，空格键不能作为标准快捷键注册，但在弹窗显示时仍可使用</div>
+            <div class="shortcut-conflict" id="replaceShortcutConflict"></div>
+          </div>
+        </div>
+      </section>
+      
+
+      
+      <div class="actions">
+        <div class="actions-main">
+          <button id="saveBtn" class="btn primary">
+            <span>保存设置</span>
+          </button>
+          <button id="resetBtn" class="btn secondary">
+            <span>重置设置</span>
+          </button>
+        </div>
+        <div class="actions-extra">
+          <button id="testPageBtn" class="btn feature">
+            <span>文案优化测试</span>
+          </button>
+        </div>
+      </div>
+    </main>
+    
+    <footer>
+      <p>LongPort AI Pro v1.0.0</p>
+      <a href="#" id="privacyLink" class="footer-link">隐私政策</a>
+    </footer>
+  </div>
+  
+  <!-- 脚本将由 webpack 自动注入 -->
+</body>
+</html>

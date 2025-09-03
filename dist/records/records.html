@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LongPort AI Pro - 优化记录管理</title>
+  <link rel="stylesheet" href="records.css">
+<script defer src="../records/index.js"></script><link href="../records/records.css" rel="stylesheet"></head>
+<body>
+  <div class="records-container">
+    <header class="records-header">
+      <div class="header-title">
+        <h1>优化记录管理</h1>
+        <span class="records-count" id="recordsCount">0 条记录</span>
+      </div>
+      <div class="header-actions">
+        <button id="refreshBtn" class="icon-btn refresh-btn" title="刷新记录">
+          <span class="icon refresh-icon"></span>
+        </button>
+        <button id="exportBtn" class="icon-btn export-btn" title="导出记录">
+          <span class="icon export-icon"></span>
+        </button>
+        <button id="clearAllBtn" class="icon-btn clear-btn" title="清空记录">
+          <span class="icon clear-icon"></span>
+        </button>
+        <button id="settingsBtn" class="icon-btn settings-btn" title="设置">
+          <span class="icon settings-icon"></span>
+        </button>
+      </div>
+    </header>
+    
+    <div class="search-bar">
+      <div class="search-input-wrapper">
+        <input type="text" id="searchInput" class="search-input" placeholder="搜索记录...">
+        <span class="search-icon"></span>
+      </div>
+      <div class="filter-dropdown">
+        <button id="filterBtn" class="filter-btn">
+          <span class="filter-icon"></span>
+          <span>筛选</span>
+        </button>
+        <div class="filter-menu" id="filterMenu">
+          <div class="filter-section">
+            <h3>优化模式</h3>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="filterBasic" checked>
+                <span class="checkbox-text">基础模式</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="filterStrict" checked>
+                <span class="checkbox-text">严格模式</span>
+              </label>
+            </div>
+          </div>
+          <div class="filter-section">
+            <h3>时间范围</h3>
+            <div class="date-range">
+              <input type="date" id="startDate" class="date-input">
+              <span class="date-separator">至</span>
+              <input type="date" id="endDate" class="date-input">
+            </div>
+          </div>
+          <div class="filter-section">
+            <h3>来源网站</h3>
+            <div class="domain-list" id="domainList">
+              <!-- 动态生成的网站列表 -->
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button id="applyFilterBtn" class="btn primary">应用筛选</button>
+            <button id="resetFilterBtn" class="btn secondary">重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="records-list-container">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon"></div>
+        <h2>暂无优化记录</h2>
+        <p>使用文本优化功能后，记录将显示在这里</p>
+      </div>
+      
+      <div class="records-list" id="recordsList">
+        <!-- 记录项将动态生成 -->
+      </div>
+      
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <p>加载记录中...</p>
+      </div>
+    </div>
+    
+    <div class="record-detail" id="recordDetail">
+      <div class="detail-header">
+        <button id="backToListBtn" class="back-btn">
+          <span class="back-icon"></span>
+          <span>返回列表</span>
+        </button>
+        <div class="detail-actions">
+          <button id="copyOriginalBtn" class="btn secondary sm">复制原文</button>
+          <button id="copyOptimizedBtn" class="btn primary sm">复制优化文本</button>
+          <button id="deleteRecordBtn" class="btn danger sm">删除记录</button>
+        </div>
+      </div>
+      
+      <div class="detail-info">
+        <div class="info-item">
+          <span class="info-label">优化时间:</span>
+          <span class="info-value" id="detailTimestamp">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">来源网站:</span>
+          <span class="info-value" id="detailDomain">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">优化模式:</span>
+          <span class="info-value" id="detailMode">-</span>
+        </div>
+      </div>
+      
+      <div class="detail-stats">
+        <div class="stat-item">
+          <span class="stat-value" id="detailOriginalLength">0</span>
+          <span class="stat-label">原文字数</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="detailOptimizedLength">0</span>
+          <span class="stat-label">优化后字数</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="detailLengthChange">0</span>
+          <span class="stat-label">字数变化</span>
+        </div>
+      </div>
+      
+      <div class="detail-content">
+        <div class="text-section">
+          <h3>原始文本</h3>
+          <div class="text-content original-text" id="detailOriginalText"></div>
+        </div>
+        
+        <div class="text-section">
+          <h3>优化后文本</h3>
+          <div class="text-content optimized-text" id="detailOptimizedText"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="no-results" id="noResults">
+      <div class="no-results-icon"></div>
+      <h2>未找到匹配记录</h2>
+      <p>尝试调整搜索条件或筛选器</p>
+    </div>
+  </div>
+  
+  <!-- 确认对话框 -->
+  <div class="dialog-overlay" id="dialogOverlay">
+    <div class="dialog" id="confirmDialog">
+      <div class="dialog-header">
+        <h3 id="dialogTitle">确认操作</h3>
+        <button id="closeDialogBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="dialog-content">
+        <p id="dialogMessage">确定要执行此操作吗？</p>
+      </div>
+      <div class="dialog-footer">
+        <button id="cancelDialogBtn" class="btn secondary">取消</button>
+        <button id="confirmDialogBtn" class="btn danger">确认</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 通知提示 -->
+  <div class="toast" id="toast">
+    <div class="toast-content">
+      <span class="toast-icon"></span>
+      <span class="toast-message" id="toastMessage"></span>
+    </div>
+  </div>
+  
+  <!-- 脚本将由webpack自动注入 -->
+</body>
+</html>

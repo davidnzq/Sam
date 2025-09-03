@@ -1,0 +1,543 @@
+/*!*********************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js!./src/test/test.css ***!
+  \*********************************************************************/
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 深色模式变量 */
+:root {
+  /* 品牌色 D0FF00 及其变体 */
+  --test-brand-color: #D0FF00;
+  --test-brand-hover: #DBFF33;
+  --test-brand-active: #B8E600;
+  --test-brand-light: #F2FFCC;
+  --test-link-color: #B0D605; /* 文本链接颜色 */
+  
+  --test-bg-color: #f8f9fa;
+  --test-text-color: #1e1e1e;
+  --test-border-color: #eee;
+  --test-primary-color: #D0FF00; /* 更新为品牌色 */
+  --test-primary-hover: #DBFF33; /* 更浅的绿色 */
+  --test-primary-active: #B8E600; /* 更深的绿色 */
+  --test-secondary-bg: #fff;
+  --test-secondary-text: #666;
+  --test-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --test-feature-bg: #F8FFED; /* 浅绿色背景 */
+  --test-input-bg: #fff;
+  --test-input-border: #ddd;
+  --test-input-focus-shadow: 0 0 0 2px rgba(208, 255, 0, 0.2);
+  
+  /* 开关样式变量 */
+  --test-switch-width: 40px;
+  --test-switch-height: 20px;
+  --test-switch-padding: 2px;
+  --test-switch-bg-off: #ccc;
+  --test-switch-bg-on: var(--test-primary-color);
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 深色模式下的品牌色变体 */
+    --test-brand-color: #B8E600; /* 深色模式下的绿色，降低亮度 */
+    --test-brand-hover: #C4F20D;
+    --test-brand-active: #A3CC00;
+    --test-brand-light: #2A3300;
+    --test-link-color: #B0D605; /* 文本链接颜色保持一致 */
+    
+    --test-bg-color: #1f1f1f;
+    --test-text-color: #e0e0e0;
+    --test-border-color: #303030;
+    --test-primary-color: #B8E600; /* 深色模式下的品牌色 */
+    --test-primary-hover: #C4F20D;
+    --test-primary-active: #A3CC00;
+    --test-secondary-bg: #141414;
+    --test-secondary-text: #a0a0a0;
+    --test-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    --test-feature-bg: #263300; /* 深色模式下的暗绿色背景 */
+    --test-input-bg: #141414;
+    --test-input-border: #303030;
+    --test-input-focus-shadow: 0 0 0 2px rgba(184, 230, 0, 0.2);
+    
+    /* 深色模式开关样式 */
+    --test-switch-bg-off: #444;
+    --test-switch-bg-on: var(--test-primary-color);
+  }
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--test-bg-color);
+  color: var(--test-text-color);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+header {
+  margin-bottom: 40px;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+/* 移除文案优化测试下面的绿线 */
+header::after {
+  display: none;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+/* 移除 LongPort AI Pro 前面的 icon */
+.logo::before {
+  display: none;
+}
+
+h1 {
+  font-size: 26px;
+  color: var(--test-text-color);
+  font-weight: 600;
+}
+
+.header-subtitle {
+  font-size: 16px;
+  color: var(--test-secondary-text);
+}
+
+/* 移除整体的绿色边框 */
+.settings-section {
+  background-color: var(--test-secondary-bg);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  box-shadow: var(--test-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 移除顶部的渐变线 */
+.settings-section::before {
+  display: none;
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+  position: relative;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--test-border-color);
+}
+
+.section-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--test-text-color);
+  margin: 0;
+  margin-bottom: 6px;
+  position: relative;
+  display: inline-block;
+}
+
+/* 移除文案优化效果测试下面的绿线 */
+.section-header h2::before {
+  display: none;
+}
+
+.section-description {
+  font-size: 14px;
+  color: var(--test-secondary-text);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.section-description {
+  font-size: 14px;
+  color: var(--test-secondary-text);
+  margin-top: 4px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--test-text-color);
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.radio-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: var(--test-bg-color);
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.radio-wrapper:hover {
+  background-color: var(--test-feature-bg);
+}
+
+.radio-wrapper input[type="radio"] {
+  margin-right: 8px;
+  accent-color: var(--test-primary-color);
+}
+
+.radio-label {
+  font-weight: 500;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--test-input-border);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 150px;
+  background-color: var(--test-input-bg);
+  color: var(--test-text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--test-primary-color);
+  box-shadow: var(--test-input-focus-shadow);
+  background-color: var(--test-feature-bg);
+}
+
+.text-counter {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--test-secondary-text);
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn.primary {
+  background-color: var(--test-primary-color);
+  color: #000000; /* 按照要求指定黑色文字 */
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn.primary:hover {
+  background-color: var(--test-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn.primary:active {
+  transform: translateY(0);
+  background-color: var(--test-primary-active);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn.secondary {
+  background-color: var(--test-secondary-bg);
+  color: var(--test-text-color);
+  border: 1px solid var(--test-input-border);
+}
+
+.btn.secondary:hover {
+  border-color: var(--test-primary-hover);
+  color: var(--test-primary-hover);
+  background-color: var(--test-feature-bg);
+}
+
+.btn.secondary:active {
+  background-color: var(--test-feature-bg);
+  border-color: var(--test-primary-color);
+  color: var(--test-primary-color);
+}
+
+.btn.link {
+  background: none;
+  border: none;
+  color: var(--test-link-color);
+  padding: 0 8px;
+  text-decoration: underline;
+}
+
+.btn.link:hover {
+  color: var(--test-primary-hover);
+  text-decoration: underline;
+}
+
+.description {
+  font-size: 13px;
+  color: var(--test-secondary-text);
+  margin-top: 6px;
+  margin-left: 0;
+}
+
+.test-result-container {
+  margin-top: 20px;
+  border: 1px solid var(--test-border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.test-result-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.test-loading {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--test-secondary-bg);
+  display: none;
+}
+
+/* 开关样式 */
+.switch-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: var(--test-switch-width);
+  height: var(--test-switch-height);
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--test-switch-bg-off);
+  transition: .4s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: calc(var(--test-switch-height) - 4px);
+  width: calc(var(--test-switch-height) - 4px);
+  left: var(--test-switch-padding);
+  bottom: var(--test-switch-padding);
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--test-switch-bg-on);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--test-primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(calc(var(--test-switch-width) - var(--test-switch-height)));
+}
+
+.switch-label {
+  display: inline;
+  margin-right: 0;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+.test-loading.show {
+  display: flex;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(208, 255, 0, 0.2);
+  border-top-color: var(--test-primary-color);
+  border-radius: 50%;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 16px;
+  box-shadow: 0 0 10px rgba(208, 255, 0, 0.3);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.test-result {
+  display: none;
+  flex-direction: column;
+}
+
+.test-result.show {
+  display: flex;
+}
+
+.result-header {
+  padding: 16px;
+  background-color: var(--test-feature-bg);
+  border-bottom: 1px solid var(--test-border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.result-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 50px;
+  height: 2px;
+  background-color: var(--test-primary-color);
+}
+
+.result-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.result-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.stat-label {
+  color: var(--test-secondary-text);
+}
+
+.stat-value {
+  font-weight: 500;
+}
+
+.stat-value.positive {
+  color: #52c41a;
+}
+
+.stat-value.negative {
+  color: #ff4d4f;
+}
+
+.result-content {
+  padding: 16px;
+  background-color: var(--test-bg-color);
+  min-height: 150px;
+  position: relative;
+  border-left: 2px solid var(--test-primary-color);
+  margin-left: 10px;
+}
+
+.optimized-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 14px;
+  padding: 10px;
+  background-color: var(--test-feature-bg);
+  border-radius: 6px;
+  position: relative;
+}
+
+.result-actions {
+  padding: 12px 16px;
+  border-top: 1px solid var(--test-border-color);
+  background-color: var(--test-secondary-bg);
+  display: flex;
+  justify-content: flex-end;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--test-secondary-text);
+  font-size: 13px;
+  margin-top: 40px;
+}
+
+.footer-link {
+  color: var(--test-link-color);
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+
+/*# sourceMappingURL=test.css.map*/
