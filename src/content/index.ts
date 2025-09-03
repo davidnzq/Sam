@@ -89,22 +89,32 @@ document.addEventListener('keydown', (event) => {
   }
   
   // 检查是否匹配替换快捷键，且弹窗已显示
-  if (matchesShortcut(event, replaceShortcut) && popupElement) {
+  // 特别处理空格键，因为它在某些网站上可能有特殊行为
+  const isSpaceKey = event.key === ' ' || event.keyCode === 32;
+  if ((isSpaceKey || matchesShortcut(event, replaceShortcut)) && popupElement) {
+    // 检查弹窗是否显示且包含替换按钮
     const replaceButton = popupElement.querySelector('.longport-ai-btn-primary');
     if (replaceButton) {
+      console.log('触发替换按钮点击');
       (replaceButton as HTMLButtonElement).click();
       event.preventDefault(); // 阻止默认行为
+      return false; // 确保事件不继续传播
     }
   }
 });
 
 // 检查事件是否匹配快捷键配置
 function matchesShortcut(event: KeyboardEvent, shortcut: any): boolean {
+  // 增强快捷键匹配逻辑，处理特殊情况
+  const keyMatches = event.key.toLowerCase() === shortcut.key.toLowerCase() || 
+                    // 特别处理空格键，它可能在不同浏览器中有不同表示
+                    (shortcut.key === ' ' && (event.key === ' ' || event.key === 'Spacebar' || event.keyCode === 32));
+  
   return event.altKey === shortcut.altKey && 
          event.ctrlKey === shortcut.ctrlKey && 
          event.shiftKey === shortcut.shiftKey && 
          event.metaKey === shortcut.metaKey && 
-         event.key.toLowerCase() === shortcut.key.toLowerCase();
+         keyMatches;
 }
 
 // 监听设置变更
@@ -666,12 +676,12 @@ function showResultPopup(originalText: string, optimizedText: string, stats?: { 
   const optimizedSection = document.createElement('div');
   optimizedSection.className = 'longport-ai-text-section';
   
-  const optimizedTextarea = document.createElement('textarea');
-  optimizedTextarea.className = 'longport-ai-text-area longport-ai-optimized';
-  optimizedTextarea.value = optimizedText;
-  optimizedTextarea.readOnly = true;
+  // 使用div而不是textarea来显示优化文案，避免边框和滚动条
+  const optimizedContent = document.createElement('div');
+  optimizedContent.className = 'longport-ai-text-area longport-ai-optimized';
+  optimizedContent.textContent = optimizedText;
   
-  optimizedSection.appendChild(optimizedTextarea);
+  optimizedSection.appendChild(optimizedContent);
   
   // 添加到文本容器
   textContainer.appendChild(optimizedSection);

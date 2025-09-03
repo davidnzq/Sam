@@ -73,10 +73,10 @@ const defaultSettings = {
     strictMode: false,
     shortcuts: {
         optimize: {
-            key: 'O', // 默认Alt+O
-            altKey: true,
-            ctrlKey: false,
-            shiftKey: false,
+            key: 'L', // 默认Ctrl+Shift+L
+            altKey: false,
+            ctrlKey: true,
+            shiftKey: true,
             metaKey: false
         },
         replace: {

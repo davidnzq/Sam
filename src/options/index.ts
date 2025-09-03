@@ -41,10 +41,10 @@ const defaultSettings: Settings = {
   strictMode: false,
   shortcuts: {
     optimize: {
-      key: 'O',           // 默认Alt+O
-      altKey: true,
-      ctrlKey: false,
-      shiftKey: false,
+      key: 'L',           // 默认Ctrl+Shift+L
+      altKey: false,
+      ctrlKey: true,
+      shiftKey: true,
       metaKey: false
     },
     replace: {
@@ -696,7 +696,7 @@ function openTestPage(): void {
   chrome.tabs.create({ url: chrome.runtime.getURL('test/test.html') });
 }
 
-  // 页面加载完成后初始化
+// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
   // 加载设置
   loadSettings();

@@ -229,6 +229,9 @@
   min-height: auto;
   height: auto;
   line-height: 1.8;
+  outline: none;
+  box-shadow: none;
+  overflow: auto;
 }
 
 .longport-ai-stats {
