@@ -1,4 +1,4 @@
-# longPort AI Pro
+# LongPort AI Pro
 
 longPort AI Pro 是一个浏览器扩展程序，专门为 Notion、LongPort 文档平台等提供 AI 辅助写作和文本优化功能。该工具旨在提升用户的文档编写效率和内容质量。
 
