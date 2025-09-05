@@ -77,6 +77,9 @@ function loadShortcuts() {
 // 初始加载快捷键配置
 loadShortcuts();
 
+// 保存当前弹窗中的优化文本
+let currentOptimizedText: string | null = null;
+
 // 监听快捷键
 document.addEventListener('keydown', (event) => {
   // 检查是否匹配优化快捷键
@@ -90,31 +93,197 @@ document.addEventListener('keydown', (event) => {
   
   // 检查是否匹配替换快捷键，且弹窗已显示
   // 特别处理空格键，因为它在某些网站上可能有特殊行为
-  const isSpaceKey = event.key === ' ' || event.keyCode === 32;
+  const isSpaceKey = event.key === ' ' || event.code === 'Space' || event.keyCode === 32;
+  const isLongportApp = window.location.hostname.includes('longportapp.com');
+  
+  // 添加详细日志记录所有按键事件
+  console.log('按键事件:', {
+    key: event.key, 
+    code: event.code, 
+    keyCode: event.keyCode, 
+    isSpaceKey, 
+    hasPopup: !!popupElement,
+    website: window.location.hostname,
+    target: event.target,
+    currentTarget: event.currentTarget
+  });
+  
+  // 特别处理 longportapp.com 网站上的空格键
+  if (isSpaceKey && isLongportApp && popupElement) {
+    console.log('在 longportapp.com 网站上检测到空格键，弹窗已显示');
+    
+    // 立即阻止默认行为和事件传播
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    
+    // 在 longportapp.com 上处理空格键替换
+    handleLongportAppSpaceReplace();
+    return false;
+  }
+  
+  // 处理其他网站或非空格键的替换快捷键
   if ((isSpaceKey || matchesShortcut(event, replaceShortcut)) && popupElement) {
-    // 检查弹窗是否显示且包含替换按钮
-    const replaceButton = popupElement.querySelector('.longport-ai-btn-primary');
-    if (replaceButton) {
-      console.log('触发替换按钮点击');
-      (replaceButton as HTMLButtonElement).click();
-      event.preventDefault(); // 阻止默认行为
-      return false; // 确保事件不继续传播
+    console.log('检测到替换快捷键或空格键，当前网站:', window.location.hostname);
+    
+    // 检查弹窗是否显示且包含优化后的文本
+    const optimizedTextElement = popupElement.querySelector('.longport-ai-optimized');
+    if (optimizedTextElement && optimizedTextElement.textContent) {
+      const optimizedText = optimizedTextElement.textContent;
+      // 保存当前优化文本
+      currentOptimizedText = optimizedText;
+      
+      console.log('触发替换操作，优化文本:', optimizedText.substring(0, 20) + '...');
+      
+      // 阻止默认行为并防止事件传播
+      event.preventDefault();
+      event.stopPropagation();
+      
+      // 执行替换操作
+      replaceSelectedText(optimizedText);
+      removePopup();
+      return false;
     }
   }
 });
 
+// 为 longportapp.com 网站添加额外的空格键监听器
+if (window.location.hostname.includes('longportapp.com')) {
+  console.log('为 longportapp.com 网站添加额外的空格键监听器');
+  
+  // 捕获所有的键盘事件，包括捕获阶段
+  window.addEventListener('keydown', (event) => {
+    const isSpaceKey = event.key === ' ' || event.code === 'Space' || event.keyCode === 32;
+    
+    if (isSpaceKey && popupElement) {
+      console.log('longportapp.com 特殊监听器捕获到空格键，弹窗已显示');
+      
+      // 立即阻止默认行为和事件传播
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      
+      // 处理替换操作
+      setTimeout(() => handleLongportAppSpaceReplace(), 0);
+      return false;
+    }
+  }, true); // 捕获阶段监听
+  
+  // 添加全局点击监听器，当弹窗显示时保存优化文本
+  document.addEventListener('click', () => {
+    if (popupElement) {
+      const optimizedTextElement = popupElement.querySelector('.longport-ai-optimized');
+      if (optimizedTextElement && optimizedTextElement.textContent) {
+        currentOptimizedText = optimizedTextElement.textContent;
+        console.log('保存当前优化文本:', currentOptimizedText.substring(0, 20) + '...');
+      }
+    }
+  }, true);
+}
+
+// 处理 longportapp.com 网站上的空格键替换
+function handleLongportAppSpaceReplace(): void {
+  console.log('处理 longportapp.com 网站上的空格键替换');
+  
+  // 检查弹窗是否存在
+  if (!popupElement) {
+    console.warn('longportapp.com 空格键替换失败: 弹窗不存在');
+    return;
+  }
+  
+  // 获取优化文本
+  let optimizedText: string | null = null;
+  
+  // 先尝试从弹窗中获取
+  const optimizedTextElement = popupElement.querySelector('.longport-ai-optimized');
+  if (optimizedTextElement && optimizedTextElement.textContent) {
+    optimizedText = optimizedTextElement.textContent;
+    console.log('从弹窗中获取优化文本:', optimizedText.substring(0, 20) + '...');
+  } 
+  // 如果失败，尝试使用保存的文本
+  else if (currentOptimizedText) {
+    optimizedText = currentOptimizedText;
+    console.log('使用保存的优化文本:', optimizedText.substring(0, 20) + '...');
+  }
+  
+  // 如果没有优化文本，无法继续
+  if (!optimizedText) {
+    console.warn('longportapp.com 空格键替换失败: 未找到优化文本');
+    return;
+  }
+  
+  // 尝试模拟点击替换按钮
+  const replaceButton = popupElement.querySelector('.longport-ai-btn-primary');
+  if (replaceButton) {
+    console.log('longportapp.com 空格键替换: 模拟点击替换按钮');
+    try {
+      (replaceButton as HTMLButtonElement).click();
+      return;
+    } catch (clickError) {
+      console.error('模拟点击替换按钮失败:', clickError);
+    }
+  }
+  
+  // 如果模拟点击失败，尝试直接调用替换函数
+  try {
+    // 先尝试使用 execCommand
+    console.log('longportapp.com 空格键替换: 尝试 execCommand');
+    if (document.execCommand('insertText', false, optimizedText)) {
+      console.log('execCommand 替换成功');
+      removePopup();
+      showToast('文本替换成功', 'success');
+      return;
+    }
+  } catch (execError) {
+    console.error('execCommand 替换失败:', execError);
+  }
+  
+  // 如果 execCommand 失败，直接调用替换函数
+  console.log('longportapp.com 空格键替换: 直接调用 replaceSelectedText');
+  replaceSelectedText(optimizedText);
+  removePopup();
+}
+
 // 检查事件是否匹配快捷键配置
 function matchesShortcut(event: KeyboardEvent, shortcut: any): boolean {
-  // 增强快捷键匹配逻辑，处理特殊情况
-  const keyMatches = event.key.toLowerCase() === shortcut.key.toLowerCase() || 
-                    // 特别处理空格键，它可能在不同浏览器中有不同表示
-                    (shortcut.key === ' ' && (event.key === ' ' || event.key === 'Spacebar' || event.keyCode === 32));
+  // 输出调试日志
+  console.log('快捷键匹配检查:', {
+    eventKey: event.key,
+    eventCode: event.code,
+    eventKeyCode: event.keyCode,
+    shortcutKey: shortcut.key,
+    isLongportApp: window.location.hostname.includes('longportapp.com')
+  });
   
-  return event.altKey === shortcut.altKey && 
-         event.ctrlKey === shortcut.ctrlKey && 
-         event.shiftKey === shortcut.shiftKey && 
-         event.metaKey === shortcut.metaKey && 
-         keyMatches;
+  // 增强快捷键匹配逻辑，处理特殊情况
+  const keyMatches = 
+    // 标准匹配
+    event.key.toLowerCase() === shortcut.key.toLowerCase() || 
+    // 特别处理空格键，它可能在不同浏览器中有不同表示
+    (shortcut.key === ' ' && (
+      event.key === ' ' || 
+      event.key === 'Spacebar' || 
+      event.code === 'Space' || 
+      event.keyCode === 32
+    ));
+  
+  const modifiersMatch = 
+    event.altKey === shortcut.altKey && 
+    event.ctrlKey === shortcut.ctrlKey && 
+    event.shiftKey === shortcut.shiftKey && 
+    event.metaKey === shortcut.metaKey;
+  
+  // 在 longportapp.com 网站上，对空格键进行特殊处理
+  if (window.location.hostname.includes('longportapp.com') && 
+      shortcut.key === ' ' && 
+      (event.key === ' ' || event.code === 'Space' || event.keyCode === 32)) {
+    console.log('longportapp.com 网站上的空格键匹配检查，修饰键匹配:', modifiersMatch);
+    return modifiersMatch; // 在 longportapp.com 上，只要修饰键匹配就返回 true
+  }
+  
+  const result = modifiersMatch && keyMatches;
+  console.log('快捷键匹配结果:', result);
+  return result;
 }
 
 // 监听设置变更
@@ -639,6 +808,9 @@ function positionPopupIntelligently(): void {
 
 // 显示结果弹窗
 function showResultPopup(originalText: string, optimizedText: string, stats?: { originalLength: number; optimizedLength: number }): void {
+  // 保存当前优化文本，供空格键替换使用
+  currentOptimizedText = optimizedText;
+  console.log('显示结果弹窗，保存优化文本:', optimizedText.substring(0, 20) + '...');
   // 如果已有弹窗，先移除
   removePopup();
 
@@ -726,7 +898,7 @@ function showResultPopup(originalText: string, optimizedText: string, stats?: { 
       `${changeAmount}`;
     
     // 将字数变化显示在一行
-    changeStats.innerHTML = `<span class="longport-ai-stats-label">字数变化：</span><span class="longport-ai-stats-change ${changeAmount >= 0 ? 'longport-ai-positive' : 'longport-ai-negative'}">${changeText}</span>`;
+    changeStats.innerHTML = `<div style="width:100%;white-space:nowrap;overflow:hidden;"><span class="longport-ai-stats-label">字数变化：</span><span class="longport-ai-stats-change ${changeAmount >= 0 ? 'longport-ai-positive' : 'longport-ai-negative'}">${changeText}</span></div>`;
     
     // 添加字数变化到行
     basicStatsDiv.appendChild(changeStats);
@@ -759,6 +931,28 @@ function showResultPopup(originalText: string, optimizedText: string, stats?: { 
   replaceButton.className = 'longport-ai-btn longport-ai-btn-primary';
   replaceButton.textContent = '替换';
   replaceButton.addEventListener('click', () => {
+    console.log('点击替换按钮，执行替换操作');
+    
+    // 检查是否在 longportapp.com 网站上
+    const isLongportApp = window.location.hostname.includes('longportapp.com');
+    if (isLongportApp) {
+      console.log('longportapp.com 网站上点击替换按钮');
+      
+      // 在 longportapp.com 网站上使用特殊处理
+      try {
+        // 先尝试 execCommand
+        if (document.execCommand('insertText', false, optimizedText)) {
+          console.log('longportapp.com: execCommand 替换成功');
+          removePopup();
+          showToast('文本替换成功', 'success');
+          return;
+        }
+      } catch (e) {
+        console.error('longportapp.com: execCommand 失败:', e);
+      }
+    }
+    
+    // 标准替换处理
     replaceSelectedText(optimizedText);
     removePopup();
   });
@@ -1110,6 +1304,41 @@ function copyToClipboard(text: string): Promise<void> {
 
 // 替换选中文本
 function replaceSelectedText(newText: string): void {
+  console.log('执行替换选中文本函数，新文本:', newText.substring(0, 20) + '...');
+  
+  // 检查是否在 longportapp.com 网站上
+  const isLongportApp = window.location.hostname.includes('longportapp.com');
+  
+  if (isLongportApp) {
+    console.log('longportapp.com 网站上的替换文本操作');
+    
+    // 在 longportapp.com 网站上使用特殊处理
+    try {
+      // 尝试直接使用 execCommand
+      if (document.execCommand('insertText', false, newText)) {
+        console.log('longportapp.com: execCommand 替换成功');
+        showToast('文本替换成功', 'success');
+        return;
+      }
+    } catch (e) {
+      console.error('longportapp.com: execCommand 失败', e);
+    }
+    
+    // 如果当前选中区域不存在，尝试使用剪贴板
+    if (!currentSelection) {
+      console.log('longportapp.com: 没有选中区域，尝试使用剪贴板');
+      copyToClipboard(newText)
+        .then(() => {
+          showToast('文本已复制到剪贴板，请手动粘贴', 'success');
+        })
+        .catch((error) => {
+          console.error('剪贴板操作失败:', error);
+          showToast('替换失败，请手动复制粘贴', 'error');
+        });
+      return;
+    }
+  }
+  
   if (!currentSelection) {
     console.error('没有可替换的文本');
     showToast('没有可替换的文本', 'error');
@@ -1148,12 +1377,116 @@ function replaceSelectedText(newText: string): void {
     const containerElement = currentSelection.range.commonAncestorContainer;
     const isEditable = isEditableElement(containerElement);
     
+    // 检查是否在 longportapp.com 网站上
+    const isLongportApp = window.location.hostname.includes('longportapp.com');
+    
     // 尝试检测 Notion 编辑器
     const isNotionEditor = containerElement && 
       (containerElement.parentElement?.className.includes('notion') || 
        containerElement.parentElement?.parentElement?.className.includes('notion'));
        
-    if (isNotionEditor) {
+    if (isLongportApp) {
+      console.log('检测到 longportapp.com 网站，使用增强特殊处理');
+      
+      // 在 longportapp.com 网站上使用增强特殊处理
+      // 直接尝试所有可能的替换方法，直到成功
+      
+      // 方法 1: 尝试使用 execCommand
+      try {
+        console.log('longportapp.com: 尝试方法 1 - execCommand');
+        const success = document.execCommand('insertText', false, newText);
+        if (success) {
+          console.log('execCommand 替换成功');
+          showToast('文本替换成功', 'success');
+          return;
+        }
+      } catch (execError) {
+        console.error('execCommand 替换失败:', execError);
+      }
+      
+      // 方法 2: 尝试使用标准 DOM API
+      try {
+        console.log('longportapp.com: 尝试方法 2 - 标准 DOM API');
+        const textNode = document.createTextNode(newText);
+        currentSelection.range.deleteContents();
+        currentSelection.range.insertNode(textNode);
+        
+        // 创建新的范围选择插入的文本
+        const selection = window.getSelection();
+        if (selection && textNode.parentNode) {
+          const range = document.createRange();
+          range.selectNodeContents(textNode);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+        
+        console.log('DOM API 替换成功');
+        showToast('文本替换成功', 'success');
+        return;
+      } catch (domError) {
+        console.error('DOM API 替换失败:', domError);
+      }
+      
+      // 方法 3: 尝试使用文档片段
+      try {
+        console.log('longportapp.com: 尝试方法 3 - 文档片段');
+        const range = currentSelection.range;
+        range.deleteContents();
+        
+        // 使用文档片段插入文本
+        const fragment = document.createDocumentFragment();
+        const textNode = document.createTextNode(newText);
+        fragment.appendChild(textNode);
+        range.insertNode(fragment);
+        
+        console.log('文档片段方式替换成功');
+        showToast('文本替换成功', 'success');
+        return;
+      } catch (fragmentError) {
+        console.error('文档片段方式替换失败:', fragmentError);
+      }
+      
+      // 方法 4: 尝试使用其他 DOM 操作方式
+      try {
+        console.log('longportapp.com: 尝试方法 4 - 其他 DOM 操作');
+        // 获取当前选中区域的父元素
+        const containerElement = currentSelection.range.commonAncestorContainer;
+        const parentElement = containerElement.nodeType === Node.TEXT_NODE 
+          ? containerElement.parentElement 
+          : containerElement as HTMLElement;
+          
+        if (parentElement) {
+          // 尝试设置 innerHTML 或 textContent
+          const originalContent = parentElement.innerHTML || parentElement.textContent || '';
+          const selectedText = currentSelection.text;
+          
+          if (originalContent.includes(selectedText)) {
+            const newContent = originalContent.replace(selectedText, newText);
+            if (parentElement.innerHTML !== undefined) {
+              parentElement.innerHTML = newContent;
+            } else {
+              parentElement.textContent = newContent;
+            }
+            console.log('父元素内容替换成功');
+            showToast('文本替换成功', 'success');
+            return;
+          }
+        }
+      } catch (otherDomError) {
+        console.error('其他 DOM 操作替换失败:', otherDomError);
+      }
+      
+      // 方法 5: 最后尝试使用剪贴板方式
+      console.log('longportapp.com: 尝试方法 5 - 剪贴板');
+      copyToClipboard(newText)
+        .then(() => {
+          console.log('文本已复制到剪贴板，请手动粘贴');
+        })
+        .catch((clipboardError) => {
+          console.error('剪贴板方式失败:', clipboardError);
+          showToast('无法替换文本，请尝试手动复制粘贴', 'error');
+        });
+    } else if (isNotionEditor) {
       console.log('检测到 Notion 编辑器，尝试特殊处理');
       
       // 尝试使用 Notion 特定的方法
@@ -1261,6 +1594,13 @@ function replaceSelectedText(newText: string): void {
 
 // 检查元素是否可编辑
 function isEditableElement(node: Node | null): boolean {
+  // 首先检查是否在 longportapp.com 网站上
+  // 对于 longportapp.com 网站，始终返回 true，以确保替换功能正常工作
+  if (window.location.hostname.includes('longportapp.com')) {
+    console.log('在 longportapp.com 网站上，元素被视为可编辑');
+    return true;
+  }
+  
   if (!node) return false;
   
   // 如果是文本节点，检查其父元素

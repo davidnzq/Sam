@@ -262,14 +262,14 @@
   color: #666;
   margin-right: 4px;
   display: inline-block;
-  text-align: left;
+  float: left;
 }
 
 .longport-ai-stats-change {
   font-weight: 600;
   font-size: 13px;
   display: inline-block;
-  text-align: right;
+  float: left;
 }
 
 .longport-ai-stats-change.longport-ai-positive {
@@ -432,17 +432,20 @@
   background-color: transparent;
   font-size: 13px;
   color: var(--longport-ai-text-color);
+  width: 100%;
 }
 
 .longport-ai-stats-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .longport-ai-stats-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
 }
 
 .longport-ai-detailed-stats {
@@ -454,10 +457,9 @@
 .longport-ai-stats-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex: 1;
   background-color: transparent;
   white-space: nowrap;
+  width: 100%;
 }
 
 .longport-ai-stats-value {
@@ -471,14 +473,14 @@
   color: #666;
   margin-right: 4px;
   display: inline-block;
-  text-align: left;
+  float: left;
 }
 
 .longport-ai-stats-change {
   font-weight: 600;
   font-size: 13px;
   display: inline-block;
-  text-align: right;
+  float: left;
 }
 
 .longport-ai-stats-change.longport-ai-positive {
